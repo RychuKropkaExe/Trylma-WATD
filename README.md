@@ -1,6 +1,7 @@
 # Trylma-WATD
-A group project created with my friend for mr Macyna course
 
+Chinese checkers project created for Programming Technologies course
 
-Autors:
-Józef Melańczuk i Marek Traczyński
+Authors:
+ * Józef Melańczuk
+ * Marek Traczyński
