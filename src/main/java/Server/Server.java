@@ -1,21 +1,38 @@
 package Server;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.util.ArrayList;
 
 public class Server {
-    private static final int PORT = 2137;
+    private static final int PORT = 9090;
     private static CommandHandler commandHandler;
-    private static ArrayList<Player> players = new ArrayList<>();
+    private static ArrayList<Lobby> lobbies = new ArrayList<>();
+    private static Player king;
+    private static int lobbyCount=0;
+    private static boolean isCreated = false;
     public static void main(String[] args) throws IOException {
         ServerSocket listener = new ServerSocket(PORT);
         System.out.println("The server is running!");
         while(true) {
-            if(players.size() == 0) {
+            if(!isCreated) {
                 Socket creator = listener.accept();
-
+                System.out.println("[Server]A creator has logged!");
+                king = new Player(creator);
+                king.sendMessage("[Server]Choose number of players");
+                lobbies.add(new Lobby(Integer.parseInt(king.getServerMessage()),king));
+                lobbyCount++;
+                king = null;
+                isCreated = true;
+            }
+            else {
+                if(lobbies.get(lobbyCount-1).isOpen()) {
+                    Socket player = listener.accept();
+                    lobbies.get(lobbyCount-1).addPlayer(new Player(player));
+                }
+                else {
+                    isCreated = false;
+                }
             }
         }
 
