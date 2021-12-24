@@ -10,6 +10,4 @@ public class CommandHandler {
         this.playersQuantity = playersQuantity;
     }
 
-
-
 }
