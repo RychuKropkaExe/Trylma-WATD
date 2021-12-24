@@ -19,6 +19,7 @@ public class Server {
                 Socket creator = listener.accept();
                 System.out.println("[Server]A creator has logged!");
                 king = new Player(creator);
+                System.out.println(creator.getPort());
                 king.sendMessage("[Server]Choose number of players");
                 lobbies.add(new Lobby(Integer.parseInt(king.getServerMessage()),king));
                 lobbyCount++;
@@ -27,8 +28,7 @@ public class Server {
             }
             else {
                 if(lobbies.get(lobbyCount-1).isOpen()) {
-                    Socket player = listener.accept();
-                    lobbies.get(lobbyCount-1).addPlayer(new Player(player));
+                    lobbies.get(lobbyCount-1).addPlayer(new Player(listener.accept()));
                 }
                 else {
                     isCreated = false;

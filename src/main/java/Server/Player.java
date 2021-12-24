@@ -1,23 +1,24 @@
 package Server;
 
 import java.io.*;
+import java.net.DatagramPacket;
 import java.net.Socket;
 
-public class Player implements Runnable{
+public class Player extends Thread{
     private String serverMessage;
     private Socket client;
-    private static BufferedReader input;
-    private static PrintWriter output;
+    private static DataInputStream input;
+    private static DataOutputStream output;
     public Player(Socket socket) throws IOException{
         this.client=socket;
-        input = new BufferedReader(new InputStreamReader(client.getInputStream()));
-        output = new PrintWriter(client.getOutputStream());
+        input = new DataInputStream(client.getInputStream());
+        output = new DataOutputStream(client.getOutputStream());
     }
     @Override
     public void run(){
         try {
             while(client.isConnected()) {
-                String command = input.readLine();
+                String command = input.readUTF();
                 switch(command) {
                 }
 
@@ -31,19 +32,19 @@ public class Player implements Runnable{
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            output.close();
+            try {
+                output.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
     }
-    public void sendMessage(String message) {
-        output.println(message);
-        output.flush();
+    public void sendMessage(String message) throws IOException {
+        output.writeUTF(message);
     }
     public String getServerMessage() throws IOException {
-        while(true) {
-            if((serverMessage = input.readLine())!=null) {
-                return serverMessage;
-            }
-        }
+            serverMessage = input.readUTF();
+            return serverMessage;
     }
 }
