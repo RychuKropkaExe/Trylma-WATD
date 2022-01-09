@@ -7,9 +7,11 @@ import java.awt.geom.Ellipse2D;
 
 public class Pawn extends JComponent {
 
+
     private Point CircleCenter;
     private Color circleColor;
     private final int CircleRadius;
+
 
     public Pawn(Point a, Color c) {
         CircleRadius = 25;
@@ -44,11 +46,13 @@ public class Pawn extends JComponent {
         revalidate();
         repaint();
     }
+
     public void setCircleLocation(Point p) {
         CircleCenter = p;
         revalidate();
         repaint();
     }
+
     public Point getCircleCenter() {
         return CircleCenter;
     }

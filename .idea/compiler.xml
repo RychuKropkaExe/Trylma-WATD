@@ -10,7 +10,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="Trylma-WATD" target="17" />
+      <module name="Trylma-WATD" target="16" />
     </bytecodeTargetLevel>
   </component>
 </project>

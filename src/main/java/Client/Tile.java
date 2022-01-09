@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 
-/**Klasa do tworzenia Kół, dziedziczy po JComponent ale do rysowania wykorzystuje klasę Ellipse2D*/
 public class Tile extends JComponent {
 
 
@@ -18,7 +17,7 @@ public class Tile extends JComponent {
 
     public Tile(Point a) {
         CircleRadius = 25;
-        circleColor = Color.BLACK;
+        circleColor = new Color(188,188,188);
         CircleCenter = new Point((int)a.getX(), (int)a.getY());
     }
 
@@ -53,5 +52,13 @@ public class Tile extends JComponent {
 
     public void leave() {
         isTaken = false;
+    }
+
+    public boolean containsCircle(Point point) {
+        return (new Ellipse2D.Float(CircleCenter.x,CircleCenter.y,CircleRadius,CircleRadius).contains(point));
+    }
+
+    public Point getCircleCenter() {
+        return CircleCenter;
     }
 }

@@ -11,6 +11,12 @@ import java.util.ArrayList;
  * like notifying players that someone has joined the lobby, and giving them unique names
  */
 public class Lobby {
+
+
+    /**
+     * A list that stores players already connected to lobby
+     */
+    private static final ArrayList<Player> players = new ArrayList<>();
     /**
      * a number of players that are required to start the game
      */
@@ -20,15 +26,10 @@ public class Lobby {
      */
     private int counter = 0;
     /**
-     * A list that stores players already connected to lobby
-     */
-    private static final ArrayList<Player> players = new ArrayList<>();
-    /**
      * Tells if lobby is full
      */
     private boolean isOpen = true;
 
-    private Boolean[] arms;
 
     /**
      *
@@ -36,9 +37,9 @@ public class Lobby {
      * @param king A creator of the lobby, he only differs in lobby not in actual game
      */
     public Lobby(int number, Player king, Boolean[] arms) throws IOException {
-        this.arms = arms;
         System.out.println("DZIALA");
         playersQuantity = number;
+
         players.add(king);
         players.get(0).sendMessage("Lobby created successfully");
     }
@@ -53,8 +54,9 @@ public class Lobby {
         players.add(player);
         //players.get(counter).sendMessage("[Server] You have joined the lobby!");
         counter++;
+
         if(players.size()==playersQuantity) {
-            isOpen=false;
+            isOpen = false;
             startGame();
         }
     }
@@ -62,12 +64,10 @@ public class Lobby {
     /**
      * starts the game if lobby is full
      */
-    public void startGame() throws IOException {
-        for(int i = 0; i<players.size();i++) {
-            PrintWriter tempWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(players.get(i).getSocket().getOutputStream())));
-            tempWriter.println();
-            tempWriter.flush();
-        }
+    public void startGame() {
+        /*for(Player player : players) {
+            player.start();
+        }*/
     }
 
     /**
@@ -81,7 +81,9 @@ public class Lobby {
             tempWriter.flush();
         }
     }
+
     public void sendToSpecific(String message) {
+
     }
 
     /**

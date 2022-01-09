@@ -30,10 +30,10 @@ public class Board extends JFrame implements MouseListener {
     private int startingArm = 2;
     private int movablePawnsCounter = 0;
 
-    MoveTile mover = new MoveTile();
-
-    private Boolean[] starArm = new Boolean[6];
     private boolean containsCircle = false;
+    private Boolean[] starArm = new Boolean[6];
+
+    MoveTile mover = new MoveTile();
 
 
     public Board(Boolean[] arms, int playerID) {
@@ -98,15 +98,13 @@ public class Board extends JFrame implements MouseListener {
                 } else if(players==3 || players==4 || players==6) {
                     addPawn(point, Color.BLUE, 5);
                     circles.get(k-1).take();
-
                 }
             }
 
-            if(!starArm[1] && loop>=1){
+            if(!starArm[1] && loop>=1) {
                 getContentPane().remove(circles.get(k - 1));
                 circles.remove(k-1);
                 k--;
-
                 validate();
                 repaint();
             } else if(starArm[1] && loop>=1 && (players==6 || players==4 || players==3)) {
@@ -157,7 +155,7 @@ public class Board extends JFrame implements MouseListener {
 
         for (int z=0; z<movablePawns.size(); z++) {
             if ((movablePawns.get(z)).containsCircle(new Point(e.getX(), e.getY()))) {
-                System.out.println("SIEMA ENIU");
+                System.out.println("TEST");
                 containsCircle = true;
                 savedPosition = new Point(movablePawns.get(z).getCircleCenter());
                 index = z;
@@ -195,13 +193,14 @@ public class Board extends JFrame implements MouseListener {
                         getContentPane().add(movablePawns.get(index), 0);
                         validate();
                         repaint();
+
                         return;
                     }
                 }
                 /*circles.remove(z);
                 circles.add(temp);*/
             }
-                System.out.println("DUPA");
+                System.out.println("GUCCI");
                 getContentPane().remove(movablePawns.get(index));
                 movablePawns.get(index).setCircleLocation(savedPosition);
                 getContentPane().add(movablePawns.get(index),0);
@@ -224,7 +223,6 @@ public class Board extends JFrame implements MouseListener {
 
     class MoveTile extends MouseAdapter {
         public void mouseDragged(MouseEvent e) {
-            //poruszanie figurą
             Point TranslateVector = new Point(e.getX() - Temp.x, e.getY() - Temp.y);
             Temp = e.getPoint();
 
@@ -241,30 +239,32 @@ public class Board extends JFrame implements MouseListener {
         validate();
         repaint();
     }
+
     private void addPawn(Point p, Color c, int arm) {
         if(arm==startingArm-1){
             movablePawns.add(new Pawn(p,c));
             getContentPane().add(movablePawns.get(movablePawnsCounter),0);
             movablePawnsCounter++;
-            validate();
-            repaint();
         } else {
             pawns.add(new Pawn(p, c));
             getContentPane().add(pawns.get(pawnsCounter), 0);
             pawnsCounter++;
-            validate();
-            repaint();
         }
+        validate();
+        repaint();
     }
+
     private void setNeighbours() {
         for(Tile tile: circles) {
             int x1 = tile.getX();
             int y1 = tile.getY();
+
             for(Tile possibleNeighbour: circles) {
                 int x2 = possibleNeighbour.getX();
                 int y2 = possibleNeighbour.getY();
                 int dx = x1-x2;
                 int dy = y1-y2;
+
                 if(dx==30 && dy==0) {
                     tile.setNeighbour(0, possibleNeighbour);
                 }
