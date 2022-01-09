@@ -10,12 +10,14 @@ import java.util.ArrayList;
 public class Board extends JFrame implements MouseListener {
 
 
-    private static final ArrayList<Tile> tiles = new ArrayList<>();
+    private static final ArrayList<Tile> circles = new ArrayList<>();
     private static final ArrayList<Pawn> pawns = new ArrayList<>();
+    private static final ArrayList<Pawn> movablePawns = new ArrayList<>();
 
     private Point point;
     private Point Temp;
     private Point point2;
+    private Point savedPosition;
 
     private final int startingPointY = 460;
     private final int startingPointY2 = 220;
@@ -23,22 +25,25 @@ public class Board extends JFrame implements MouseListener {
     private int loop1 = 4;
     private int index;
     private int k = 0;
+    private int players = 4;
+    private int pawnsCounter= 0;
+    private int startingArm = 2;
+    private int movablePawnsCounter = 0;
 
-    private final boolean Triangle1 = true;
-    private final boolean Triangle2 = true;
-    private final boolean Triangle3 = true;
-    private final boolean Triangle4 = true;
-    private final boolean Triangle5 = true;
-    private final boolean Triangle6 = true;
     private boolean containsCircle = false;
+    private Boolean[] starArm = new Boolean[6];
+
+    MoveTile mover = new MoveTile();
 
 
-    public Board() {
+    public Board(Boolean[] arms, int playerID) {
+        starArm[0] = false;
+        starArm[1] = true;
+        starArm[2] = true;
+        starArm[3] = false;
+        starArm[4] = true;
+        starArm[5] = true;
         initFrame();
-
-        MoveTile mover = new MoveTile();
-        getContentPane().addMouseMotionListener(mover);
-        getContentPane().addMouseListener(this);
 
         for(int i=13; i>=1; i--) {
             if(i<=4) {
@@ -48,9 +53,13 @@ public class Board extends JFrame implements MouseListener {
             }
             startingPoint += 30;
         }
+        setNeighbours();
     }
 
     private void initFrame() {
+        getContentPane().addMouseMotionListener(mover);
+        getContentPane().addMouseListener(this);
+        getContentPane().setBackground(Color.YELLOW);
         setTitle("Trylma-WATD");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 600);
@@ -71,38 +80,60 @@ public class Board extends JFrame implements MouseListener {
             System.out.println(point + " " + point2);
             point2 = new Point(x, (startingPointY2 + step2));
 
-            if(i<9 || Triangle4) {
+            if(i<9 || starArm[3]) {
                 addTile(point);
+                if(i>=9 && (players==2 || players == 3 || players ==6)){
+                    addPawn(point, new Color(89,0,165), 3);
+                    circles.get(k-1).take();
+                }
             }
 
-            if(printCount<=4 && !Triangle6) {
-                getContentPane().remove(tiles.get(k - 1));
-                tiles.remove(k-1);
-                k--;
+            if(printCount<=4) {
+                if(!starArm[5]) {
+                    getContentPane().remove(circles.get(k - 1));
+                    circles.remove(k - 1);
+                    k--;
+                    validate();
+                    repaint();
+                } else if(players==3 || players==4 || players==6) {
+                    addPawn(point, Color.BLUE, 5);
+                    circles.get(k-1).take();
+                }
+            }
 
+            if(!starArm[1] && loop>=1) {
+                getContentPane().remove(circles.get(k - 1));
+                circles.remove(k-1);
+                k--;
                 validate();
                 repaint();
+            } else if(starArm[1] && loop>=1 && (players==6 || players==4 || players==3)) {
+                addPawn(point, Color.GREEN,1);
+                circles.get(k-1).take();
             }
 
-            if(!Triangle2 && loop>=1){
-                getContentPane().remove(tiles.get(k - 1));
-                tiles.remove(k-1);
-                k--;
-
-                validate();
-                repaint();
-            }
-
-            if(i>=9 && Triangle1) {
+            if(i>=9 && starArm[0]) {
                 addTile(point2);
+                if(players==2 || players==6) {
+                    addPawn(point2, new Color(199,24,24),0);
+                    circles.get(k-1).take();
+                }
             }
 
-            if(paintField && Triangle5) {
+            if(paintField && starArm[4]) {
                 addTile(point2);
+                if(players==4 || players==6) {
+                    addPawn(point2, new Color(241,194,50),4);
+                    circles.get(k-1).take();
+                }
             }
 
-            if(loop>=1 && Triangle3) {
+            if(loop>=1 && starArm[2]) {
                 addTile(point2);
+                if(players==4 || players ==6){
+                    addPawn(point2, new Color(247,19,132),2);
+                    circles.get(k-1).take();
+                }
             }
 
             x += 15;
@@ -122,22 +153,62 @@ public class Board extends JFrame implements MouseListener {
     public void mousePressed(MouseEvent e) {
         Temp = e.getPoint();
 
-        for (int z=0; z<tiles.size(); z++) {
-            if ((pawns.get(z)).containsCircle(new Point(e.getX(), e.getY()))) {
+        for (int z=0; z<movablePawns.size(); z++) {
+            if ((movablePawns.get(z)).containsCircle(new Point(e.getX(), e.getY()))) {
+                System.out.println("TEST");
                 containsCircle = true;
+                savedPosition = new Point(movablePawns.get(z).getCircleCenter());
                 index = z;
-                Tile temp = tiles.get(z);
-
-                tiles.remove(z);
-                tiles.add(temp);
+                //Tile temp = circles.get(z);
+                getContentPane().remove(movablePawns.get(z));
+                getContentPane().add(movablePawns.get(z),0);
+                return;
+                /*circles.remove(z);
+                circles.add(temp);*/
             }
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        containsCircle=false;
-        index=-1;
+        if(containsCircle) {
+            Point dropPoint = e.getPoint();
+            for (int z=0; z<circles.size(); z++) {
+                if ((circles.get(z)).containsCircle(dropPoint)) {
+                    /*savedPosition = new Point(movablePawns.get(z).getX(), movablePawns.get(z).getY());
+                    index = z;*/
+                    //Tile temp = circles.get(z);
+                    if(circles.get(z).isTaken){
+                        break;
+                    } else {
+                        getContentPane().remove(movablePawns.get(index));
+                        movablePawns.get(index).setCircleLocation(circles.get(z).getCircleCenter());
+                        circles.get(z).take();
+                        for(Tile tile: circles) {
+                            if(tile.getCircleCenter().equals(savedPosition)) {
+                               tile.leave();
+                               break;
+                            }
+                        }
+                        getContentPane().add(movablePawns.get(index), 0);
+                        validate();
+                        repaint();
+
+                        return;
+                    }
+                }
+                /*circles.remove(z);
+                circles.add(temp);*/
+            }
+                System.out.println("GUCCI");
+                getContentPane().remove(movablePawns.get(index));
+                movablePawns.get(index).setCircleLocation(savedPosition);
+                getContentPane().add(movablePawns.get(index),0);
+                validate();
+                repaint();
+        }
+        containsCircle = false;
+        index = -1;
     }
 
     @Override
@@ -152,23 +223,68 @@ public class Board extends JFrame implements MouseListener {
 
     class MoveTile extends MouseAdapter {
         public void mouseDragged(MouseEvent e) {
-            //poruszanie figurą
             Point TranslateVector = new Point(e.getX() - Temp.x, e.getY() - Temp.y);
             Temp = e.getPoint();
 
             if (containsCircle) {
-                System.out.println(containsCircle);
-                pawns.get(index).translateCircle(TranslateVector, e);
+                movablePawns.get(index).translateCircle(TranslateVector, e);
             }
         }
     }
 
     private void addTile(Point p) {
-        tiles.add(new Tile(p));
-        getContentPane().add(tiles.get(k));
+        circles.add(new Tile(p));
+        getContentPane().add(circles.get(k));
         k++;
-
         validate();
         repaint();
+    }
+
+    private void addPawn(Point p, Color c, int arm) {
+        if(arm==startingArm-1){
+            movablePawns.add(new Pawn(p,c));
+            getContentPane().add(movablePawns.get(movablePawnsCounter),0);
+            movablePawnsCounter++;
+        } else {
+            pawns.add(new Pawn(p, c));
+            getContentPane().add(pawns.get(pawnsCounter), 0);
+            pawnsCounter++;
+        }
+        validate();
+        repaint();
+    }
+
+    private void setNeighbours() {
+        for(Tile tile: circles) {
+            int x1 = tile.getX();
+            int y1 = tile.getY();
+
+            for(Tile possibleNeighbour: circles) {
+                int x2 = possibleNeighbour.getX();
+                int y2 = possibleNeighbour.getY();
+                int dx = x1-x2;
+                int dy = y1-y2;
+
+                if(dx==30 && dy==0) {
+                    tile.setNeighbour(0, possibleNeighbour);
+                }
+                if(dx==15 && dy==30) {
+                    tile.setNeighbour(1,possibleNeighbour);
+                }
+                if(dx==-15 && dy==30) {
+                    tile.setNeighbour(2,possibleNeighbour);
+                }
+                if(dx == -30 && dy==0) {
+                    tile.setNeighbour(3,possibleNeighbour);
+                }
+                if(dx==-15 && dy==-30) {
+                    tile.setNeighbour(4,possibleNeighbour);
+                }
+                if(dx==15 && dy==-30) {
+                    tile.setNeighbour(5,possibleNeighbour);
+                }
+            }
+            return;
+        }
     }
 }
