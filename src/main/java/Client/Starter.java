@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class Starter extends JFrame implements ActionListener {
 
@@ -18,7 +19,6 @@ public class Starter extends JFrame implements ActionListener {
 
     private static final int PORT = 9090;
 
-    private final String[] lobbySizes = {"Select number of players","2","3","4","6"};
     private final JComboBox<String> comboBox;
 
     private final JCheckBox arm1 = new JCheckBox();
@@ -30,8 +30,12 @@ public class Starter extends JFrame implements ActionListener {
 
     private final JButton submitButton = new JButton("Submit");
 
+    public static int playersNumber;
+
 
     public Starter() {
+        String[] lobbySizes = {"Select number of players", "2", "3", "4", "6"};
+
         arm1.setText("Draw bottom arm");
         arm2.setText("Draw bottom left arm");
         arm3.setText("Draw top left arm");
@@ -53,8 +57,8 @@ public class Starter extends JFrame implements ActionListener {
 
         setTitle("Starter lobby");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
         setSize(600, 400);
+        setLocationRelativeTo(null);
         setLayout(new FlowLayout());
 
         add(arm1);
@@ -94,14 +98,16 @@ public class Starter extends JFrame implements ActionListener {
             if(comboBox.getSelectedItem()!="Select number of players") {
                 String[] arms = new String[6];
 
-                String selected = (String) comboBox.getSelectedItem();
+                //String selected = (String) comboBox.getSelectedItem();
+                playersNumber = Integer.parseInt((String) Objects.requireNonNull(comboBox.getSelectedItem()));
+
                 arms[0] = String.valueOf(arm1.isSelected());
                 arms[1] = String.valueOf(arm2.isSelected());
                 arms[2] = String.valueOf(arm3.isSelected());
                 arms[3] = String.valueOf(arm4.isSelected());
                 arms[4] = String.valueOf(arm5.isSelected());
                 arms[5] = String.valueOf(arm6.isSelected());
-                output.println(selected);
+                output.println(playersNumber);
 
                 for (int i = 0; i < 6; i++) {
                     System.out.println(arms[i]);
@@ -109,17 +115,22 @@ public class Starter extends JFrame implements ActionListener {
                     output.flush();
                 }
 
+                System.out.println(playersNumber);
                 System.out.println("Started");
                 dispose();
 
-                new WaitingRoom();
+                try {
+                    new WaitingRoom();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
             }
         }
     }
 
     public static void main(String[] args) throws IOException {
 
-        socket = new Socket("localhost",PORT);
+        socket = new Socket("localhost", PORT);
         output = new PrintWriter( new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
         input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
