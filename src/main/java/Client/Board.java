@@ -25,7 +25,7 @@ public class Board extends JFrame implements MouseListener {
     private int loop1 = 4;
     private int index;
     private int k = 0;
-    private int players = 6;
+    private int players = 4;
     private int pawnsCounter= 0;
     private int startingArm = 2;
     private int movablePawnsCounter = 0;
@@ -36,11 +36,11 @@ public class Board extends JFrame implements MouseListener {
     private boolean containsCircle = false;
 
 
-    public Board() {
-        starArm[0] = true;
+    public Board(Boolean[] arms, int playerID) {
+        starArm[0] = false;
         starArm[1] = true;
         starArm[2] = true;
-        starArm[3] = true;
+        starArm[3] = false;
         starArm[4] = true;
         starArm[5] = true;
         initFrame();
@@ -59,6 +59,7 @@ public class Board extends JFrame implements MouseListener {
     private void initFrame() {
         getContentPane().addMouseMotionListener(mover);
         getContentPane().addMouseListener(this);
+        getContentPane().setBackground(Color.YELLOW);
         setTitle("Trylma-WATD");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 600);
@@ -124,7 +125,7 @@ public class Board extends JFrame implements MouseListener {
             if(paintField && starArm[4]) {
                 addTile(point2);
                 if(players==4 || players==6) {
-                    addPawn(point2, Color.YELLOW,4);
+                    addPawn(point2, new Color(241,194,50),4);
                     circles.get(k-1).take();
                 }
             }
@@ -185,6 +186,12 @@ public class Board extends JFrame implements MouseListener {
                         getContentPane().remove(movablePawns.get(index));
                         movablePawns.get(index).setCircleLocation(circles.get(z).getCircleCenter());
                         circles.get(z).take();
+                        for(Tile tile: circles) {
+                            if(tile.getCircleCenter().equals(savedPosition)) {
+                               tile.leave();
+                               break;
+                            }
+                        }
                         getContentPane().add(movablePawns.get(index), 0);
                         validate();
                         repaint();

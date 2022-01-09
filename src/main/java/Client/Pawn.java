@@ -44,4 +44,12 @@ public class Pawn extends JComponent {
         revalidate();
         repaint();
     }
+    public void setCircleLocation(Point p) {
+        CircleCenter = p;
+        revalidate();
+        repaint();
+    }
+    public Point getCircleCenter() {
+        return CircleCenter;
+    }
 }
