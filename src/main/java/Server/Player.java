@@ -5,20 +5,21 @@ import java.net.DatagramPacket;
 import java.net.Socket;
 
 public class Player extends Thread{
-    private String serverMessage;
+    private volatile String serverMessage;
     private Socket client;
-    private static DataInputStream input;
-    private static DataOutputStream output;
+    private static BufferedReader input;
+    private static PrintWriter output;
     public Player(Socket socket) throws IOException{
         this.client=socket;
-        input = new DataInputStream(client.getInputStream());
-        output = new DataOutputStream(client.getOutputStream());
+        System.out.println(client);
+        input = new BufferedReader(new InputStreamReader(client.getInputStream()));
+        output = new PrintWriter(new BufferedWriter(new OutputStreamWriter(client.getOutputStream())));
     }
     @Override
     public void run(){
         try {
             while(client.isConnected()) {
-                String command = input.readUTF();
+                String command = input.readLine();
                 switch(command) {
                 }
 
@@ -32,19 +33,20 @@ public class Player extends Thread{
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            try {
-                output.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            output.close();
         }
 
     }
     public void sendMessage(String message) throws IOException {
-        output.writeUTF(message);
+        output.print(message);
+        output.print("\n");
+        output.flush();
     }
     public String getServerMessage() throws IOException {
-            serverMessage = input.readUTF();
+            serverMessage = input.readLine();
             return serverMessage;
+    }
+    public Socket getSocket() {
+        return client;
     }
 }

@@ -1,6 +1,9 @@
 package Server;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 /**
@@ -11,7 +14,7 @@ public class Lobby {
     /**
      * a number of players that are required to start the game
      */
-    private int playersQuantity;
+    private final int playersQuantity;
     /**
      * counts how many players are there in lobby
      */
@@ -19,23 +22,25 @@ public class Lobby {
     /**
      * A list that stores players already connected to lobby
      */
-    private static ArrayList<Player> players = new ArrayList<>();
+    private static final ArrayList<Player> players = new ArrayList<>();
     /**
      * Tells if lobby is full
      */
     private boolean isOpen = true;
 
+    private Boolean[] arms;
+
     /**
      *
      * @param number a size of lobby that is created
      * @param king A creator of the lobby, he only differs in lobby not in actual game
-     * @throws IOException
      */
-    public Lobby(int number, Player king) throws IOException {
+    public Lobby(int number, Player king, Boolean[] arms) throws IOException {
+        this.arms = arms;
+        System.out.println("DZIALA");
         playersQuantity = number;
         players.add(king);
-        players.get(counter).sendMessage("Lobby created successfully");
-        counter++;
+        players.get(0).sendMessage("Lobby created successfully");
     }
 
     /**
@@ -46,7 +51,7 @@ public class Lobby {
     public void addPlayer(Player player) throws IOException {
         notifyPlayers("A player has joined the lobby");
         players.add(player);
-        players.get(counter).sendMessage("[Server] You have joined the lobby!");
+        //players.get(counter).sendMessage("[Server] You have joined the lobby!");
         counter++;
         if(players.size()==playersQuantity) {
             isOpen=false;
@@ -57,21 +62,26 @@ public class Lobby {
     /**
      * starts the game if lobby is full
      */
-    public void startGame() {
-        for(Player player : players) {
-            player.start();
+    public void startGame() throws IOException {
+        for(int i = 0; i<players.size();i++) {
+            PrintWriter tempWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(players.get(i).getSocket().getOutputStream())));
+            tempWriter.println();
+            tempWriter.flush();
         }
     }
 
     /**
      * send some message to all players in lobby
      * @param message
-     * @throws IOException
      */
     public void notifyPlayers(String message) throws IOException {
-        for(Player player : players) {
-            player.sendMessage(message);
+        for(int i = 0; i<players.size();i++) {
+            PrintWriter tempWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(players.get(i).getSocket().getOutputStream())));
+            tempWriter.println("A player has joined the lobby");
+            tempWriter.flush();
         }
+    }
+    public void sendToSpecific(String message) {
     }
 
     /**
