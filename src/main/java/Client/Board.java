@@ -12,9 +12,9 @@ import java.util.ArrayList;
 public class Board extends JFrame implements MouseListener {
 
 
-    private static final ArrayList<Tile> circles = new ArrayList<>();
-    private static final ArrayList<Pawn> pawns = new ArrayList<>();
-    private static final ArrayList<Pawn> movablePawns = new ArrayList<>();
+    private ArrayList<Tile> circles = new ArrayList<>();
+    private ArrayList<Pawn> pawns = new ArrayList<>();
+    private ArrayList<Pawn> movablePawns = new ArrayList<>();
 
     private Point point;
     private Point Temp;
@@ -23,7 +23,7 @@ public class Board extends JFrame implements MouseListener {
 
     private final int startingPointY = 460;
     private final int startingPointY2 = 220;
-    private int startingPoint = 500;
+    private int startingPoint = 550;
     private int loop1 = 4;
     private int index;
     private int k = 0;
@@ -57,6 +57,26 @@ public class Board extends JFrame implements MouseListener {
         }
         setNeighbours();
         game = new ClientThread(socket);
+
+    }
+    public Board(Boolean[] arms, int playerID, int players) throws IOException {
+        this.players=players;
+        starArm = arms;
+        startingArm = playerID;
+        initFrame();
+        int myInt = (players==2) ? 1:0;
+
+        for(int i=13+myInt; i>=1; i--) {
+            if(i<=4) {
+                drawUsingFunction1(startingPoint, i,true);
+            } else {
+                drawUsingFunction1(startingPoint, i,false);
+            }
+            startingPoint += 30;
+        }
+        setNeighbours();
+        validate();
+        repaint();
 
     }
 
@@ -98,7 +118,7 @@ public class Board extends JFrame implements MouseListener {
                     circles.remove(k - 1);
                     k--;
                     validate();
-                    repaint();
+                    /*repaint();*/
                 } else if(players==3 || players==4 || players==6) {
                     addPawn(point, Color.BLUE, 5);
                     circles.get(k-1).take();
@@ -110,7 +130,7 @@ public class Board extends JFrame implements MouseListener {
                 circles.remove(k-1);
                 k--;
                 validate();
-                repaint();
+                /*repaint();*/
             } else if(starArm[1] && loop>=1 && (players==6 || players==4 || players==3)) {
                 addPawn(point, Color.GREEN,1);
                 circles.get(k-1).take();
@@ -242,7 +262,7 @@ public class Board extends JFrame implements MouseListener {
         getContentPane().add(circles.get(k));
         k++;
         validate();
-        repaint();
+        /*repaint();*/
     }
 
     private void addPawn(Point p, Color c, int arm) {
@@ -256,7 +276,7 @@ public class Board extends JFrame implements MouseListener {
             pawnsCounter++;
         }
         validate();
-        repaint();
+      /*  repaint();*/
     }
 
     private void setNeighbours() {
