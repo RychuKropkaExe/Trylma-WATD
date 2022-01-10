@@ -30,6 +30,7 @@ public class Lobby {
      * Tells if lobby is full
      */
     private boolean isOpen = true;
+    private Boolean arms[];
 
 
     /**
@@ -40,6 +41,7 @@ public class Lobby {
     public Lobby(int number, Player king, Boolean[] arms) throws IOException {
         System.out.println("DZIALA");
         playersQuantity = number;
+        this.arms=arms;
         setPlayersArms();
         players.add(king);
         players.get(0).sendMessage("Lobby created successfully");
@@ -83,10 +85,12 @@ public class Lobby {
     public void addPlayer(Player player) throws IOException {
         notifyPlayers("A player has joined the lobby");
         players.add(player);
+        sendToSpecific("[Server] You have joined the lobby!", players.size()-1);
         //players.get(counter).sendMessage("[Server] You have joined the lobby!");
         counter++;
 
         if(players.size()==playersQuantity) {
+            System.out.println("ODPALAMY");
             isOpen = false;
             startGame();
         }
@@ -95,10 +99,20 @@ public class Lobby {
     /**
      * starts the game if lobby is full
      */
-    public void startGame() {
-        /*for(Player player : players) {
-            player.start();
-        }*/
+    public void startGame() throws IOException {
+        notifyPlayers("The game is starting!");
+        for(int i = 0; i<players.size(); i++) {
+            PrintWriter tempWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(players.get(i).getSocket().getOutputStream())));
+            for(int j=0; j<6; j++) {
+                tempWriter.println(arms[j]);
+                tempWriter.flush();
+            }
+            tempWriter.println(corners[i][0]);
+            tempWriter.flush();
+            tempWriter.println(playersQuantity);
+            tempWriter.flush();
+
+        }
     }
 
     /**
@@ -108,13 +122,15 @@ public class Lobby {
     public void notifyPlayers(String message) throws IOException {
         for(int i = 0; i<players.size();i++) {
             PrintWriter tempWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(players.get(i).getSocket().getOutputStream())));
-            tempWriter.println("A player has joined the lobby");
+            tempWriter.println(message);
             tempWriter.flush();
         }
     }
 
-    public void sendToSpecific(String message) {
-
+    public void sendToSpecific(String message, int i) throws IOException {
+        PrintWriter tempWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(players.get(i).getSocket().getOutputStream())));
+        tempWriter.println(message);
+        tempWriter.flush();
     }
 
     /**
