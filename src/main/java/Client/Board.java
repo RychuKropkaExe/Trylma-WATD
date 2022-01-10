@@ -5,6 +5,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 
 public class Board extends JFrame implements MouseListener {
@@ -25,27 +27,27 @@ public class Board extends JFrame implements MouseListener {
     private int loop1 = 4;
     private int index;
     private int k = 0;
-    private int players = 4;
+    private int players;
     private int pawnsCounter= 0;
-    private int startingArm = 2;
+    private int startingArm;
     private int movablePawnsCounter = 0;
 
     private boolean containsCircle = false;
-    private Boolean[] starArm = new Boolean[6];
+    private Boolean[] starArm;
 
     MoveTile mover = new MoveTile();
 
+    ClientThread game;
 
-    public Board(Boolean[] arms, int playerID) {
-        starArm[0] = false;
-        starArm[1] = true;
-        starArm[2] = true;
-        starArm[3] = false;
-        starArm[4] = true;
-        starArm[5] = true;
+
+    public Board(Boolean[] arms, int playerID, int players, Socket socket) throws IOException {
+        this.players=players;
+        starArm = arms;
+        startingArm = playerID;
         initFrame();
+        int myInt = (players==2) ? 1:0;
 
-        for(int i=13; i>=1; i--) {
+        for(int i=13+myInt; i>=1; i--) {
             if(i<=4) {
                 drawUsingFunction1(startingPoint, i,true);
             } else {
@@ -54,12 +56,14 @@ public class Board extends JFrame implements MouseListener {
             startingPoint += 30;
         }
         setNeighbours();
+        game = new ClientThread(socket);
+
     }
 
     private void initFrame() {
         getContentPane().addMouseMotionListener(mover);
         getContentPane().addMouseListener(this);
-        getContentPane().setBackground(Color.YELLOW);
+        getContentPane().setBackground(new Color(117, 148, 229));
         setTitle("Trylma-WATD");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 600);
@@ -193,7 +197,8 @@ public class Board extends JFrame implements MouseListener {
                         getContentPane().add(movablePawns.get(index), 0);
                         validate();
                         repaint();
-
+                        containsCircle = false;
+                        index = -1;
                         return;
                     }
                 }
@@ -241,7 +246,7 @@ public class Board extends JFrame implements MouseListener {
     }
 
     private void addPawn(Point p, Color c, int arm) {
-        if(arm==startingArm-1){
+        if(arm==startingArm){
             movablePawns.add(new Pawn(p,c));
             getContentPane().add(movablePawns.get(movablePawnsCounter),0);
             movablePawnsCounter++;

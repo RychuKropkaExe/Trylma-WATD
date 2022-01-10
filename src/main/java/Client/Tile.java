@@ -29,9 +29,17 @@ public class Tile extends JComponent {
 
     private void doDrawingCircle(Graphics g) {
         Graphics2D c2D = (Graphics2D) g;
+        Ellipse2D tile = new Ellipse2D.Float(CircleCenter.x,CircleCenter.y,CircleRadius,CircleRadius);
+
+        RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        rh.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        c2D.setRenderingHints(rh);
+
+        c2D.setColor(Color.BLACK);
+        c2D.setStroke(new BasicStroke(3));
+        c2D.draw(tile);
         c2D.setColor(circleColor);
-        c2D.setStroke(new BasicStroke(2));
-        c2D.fill(new Ellipse2D.Float(CircleCenter.x, CircleCenter.y, CircleRadius, CircleRadius));
+        c2D.fill(tile);
     }
 
     public void setNeighbour(int index, Tile tile) {

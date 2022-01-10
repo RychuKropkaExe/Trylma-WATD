@@ -28,6 +28,8 @@ public class Starter extends JFrame implements ActionListener {
     private final JCheckBox arm5 = new JCheckBox();
     private final JCheckBox arm6 = new JCheckBox();
 
+    private static WaitingScreen screen;
+
     private final JButton submitButton = new JButton("Submit");
 
     public static int playersNumber;
@@ -82,8 +84,13 @@ public class Starter extends JFrame implements ActionListener {
                         new Starter();
                     } else if (message.equals("[Server] You have joined the lobby!")) {
                         System.out.println("You have joined");
+                        screen = new WaitingScreen();
                     } else if (message.equals("A player has joined the lobby")) {
                         System.out.println("New player has joined");
+                    } else if(message.equals("The game is starting!")) {
+                        System.out.println("Umm gucci?");
+                        screen.dispose();
+                        new Board(getArms(), getPlayerID(), getPlayers(), socket);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -96,9 +103,7 @@ public class Starter extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if(e.getSource()==submitButton) {
             if(comboBox.getSelectedItem()!="Select number of players") {
-                String[] arms = new String[6];
-
-                //String selected = (String) comboBox.getSelectedItem();
+                String[] arms = new String[6];//String selected = (String) comboBox.getSelectedItem();
                 playersNumber = Integer.parseInt((String) Objects.requireNonNull(comboBox.getSelectedItem()));
 
                 arms[0] = String.valueOf(arm1.isSelected());
@@ -107,6 +112,33 @@ public class Starter extends JFrame implements ActionListener {
                 arms[3] = String.valueOf(arm4.isSelected());
                 arms[4] = String.valueOf(arm5.isSelected());
                 arms[5] = String.valueOf(arm6.isSelected());
+
+                if(playersNumber==2) {
+                    arms[0]=String.valueOf(true);
+                    arms[3]=String.valueOf(true);
+                }
+                if(playersNumber==3) {
+                    arms[0]=String.valueOf(true);
+                    arms[1]=String.valueOf(true);
+                    arms[2]=String.valueOf(true);
+                    arms[3]=String.valueOf(true);
+                    arms[4]=String.valueOf(true);
+                    arms[5]=String.valueOf(true);
+                }
+                if(playersNumber==4) {
+                    arms[1]=String.valueOf(true);
+                    arms[2]=String.valueOf(true);
+                    arms[4]=String.valueOf(true);
+                    arms[5]=String.valueOf(true);
+                }
+                if(playersNumber==6) {
+                    arms[0]=String.valueOf(true);
+                    arms[1]=String.valueOf(true);
+                    arms[2]=String.valueOf(true);
+                    arms[3]=String.valueOf(true);
+                    arms[4]=String.valueOf(true);
+                    arms[5]=String.valueOf(true);
+                }
                 output.println(playersNumber);
 
                 for (int i = 0; i < 6; i++) {
@@ -118,14 +150,24 @@ public class Starter extends JFrame implements ActionListener {
                 System.out.println(playersNumber);
                 System.out.println("Started");
                 dispose();
-
-                try {
-                    new WaitingRoom();
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                }
+                screen = new WaitingScreen();
             }
         }
+    }
+
+    private static Boolean[] getArms() throws IOException {
+        System.out.println("DOCHODZIMY TUTAJ");
+        Boolean[] temp = new Boolean[6];
+        for(int i = 0; i<6; i++) {
+            temp[i] = Boolean.parseBoolean(input.readLine());
+        }
+        return temp;
+    }
+    private static int getPlayerID() throws IOException {
+        return  Integer.parseInt(input.readLine());
+    }
+    private static int getPlayers() throws IOException {
+        return  Integer.parseInt(input.readLine());
     }
 
     public static void main(String[] args) throws IOException {

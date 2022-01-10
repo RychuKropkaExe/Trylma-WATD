@@ -27,9 +27,17 @@ public class Pawn extends JComponent {
 
     private void doDrawingCircle(Graphics g) {
         Graphics2D c2D = (Graphics2D) g;
-        c2D.setColor(circleColor);
+        Ellipse2D pawn = new Ellipse2D.Float(CircleCenter.x,CircleCenter.y,CircleRadius,CircleRadius);
+
+        RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        rh.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        c2D.setRenderingHints(rh);
+
+        c2D.setColor(Color.BLACK);
         c2D.setStroke(new BasicStroke(2));
-        c2D.fill(new Ellipse2D.Float(CircleCenter.x, CircleCenter.y, CircleRadius, CircleRadius));
+        c2D.draw(pawn);
+        c2D.setColor(circleColor);
+        c2D.fill(pawn);
     }
 
     public void setColor(Color c) {
