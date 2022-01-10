@@ -9,57 +9,76 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 
+/**
+ * Creates JFrame with the game board for each player.
+ */
 public class Board extends JFrame implements MouseListener {
 
 
+    /** ClientThread object used for creating game for each Player */
+    public ClientThread game;
+
+    /** ArrayLists containing tiles and pawns that create the board. */
     private static final ArrayList<Tile> circles = new ArrayList<>();
     private static final ArrayList<Pawn> pawns = new ArrayList<>();
     private static final ArrayList<Pawn> movablePawns = new ArrayList<>();
 
+    private final MoveTile mover = new MoveTile();
+
+    /** Point variables used for generating board. */
     private Point point;
-    private Point Temp;
     private Point point2;
     private Point savedPosition;
+    private Point temp;
 
-    private final int startingPointY = 460;
-    private final int startingPointY2 = 220;
-    private int startingPoint = 500;
-    private int loop1 = 4;
-    private int index;
+    private final int startingArm;
+    private final int players;
     private int k = 0;
-    private int players;
+    private int loop1 = 4;
     private int pawnsCounter= 0;
-    private int startingArm;
     private int movablePawnsCounter = 0;
+    private int index;
 
+    private final Boolean[] starArm;
     private boolean containsCircle = false;
-    private Boolean[] starArm;
-
-    MoveTile mover = new MoveTile();
-
-    ClientThread game;
 
 
+    /**
+     * Board constructor creates the game board and starts new Thread for every player.
+     *
+     * @param arms  Array with information which arms shall be drawn
+     * @param playerID  ID of staring player
+     * @param players  Number of players
+     * @param socket  Server's socket
+     * @throws IOException
+     */
     public Board(Boolean[] arms, int playerID, int players, Socket socket) throws IOException {
-        this.players=players;
         starArm = arms;
         startingArm = playerID;
-        initFrame();
-        int myInt = (players==2) ? 1:0;
+        this.players = players;
 
-        for(int i=13+myInt; i>=1; i--) {
+        int myInt = (players==2) ? 1 : 0;
+
+        initFrame();
+
+        for(int i=(13+myInt); i>=1; i--) {
+            int startingPoint = 500;
+
             if(i<=4) {
-                drawUsingFunction1(startingPoint, i,true);
+                drawUsingFunction(startingPoint, i,true);
             } else {
-                drawUsingFunction1(startingPoint, i,false);
+                drawUsingFunction(startingPoint, i,false);
             }
             startingPoint += 30;
         }
+
         setNeighbours();
         game = new ClientThread(socket);
-
     }
 
+    /**
+     * Creates JFrame and Mouse Listeners.
+     */
     private void initFrame() {
         getContentPane().addMouseMotionListener(mover);
         getContentPane().addMouseListener(this);
@@ -71,7 +90,15 @@ public class Board extends JFrame implements MouseListener {
         setVisible(true);
     }
 
-    public void drawUsingFunction1(int startingPosition, int printCount, boolean paintField) {
+    /**
+     * Generates the game board and sets each Player homes.
+     *
+     * TODO:
+     * @param startingPosition
+     * @param printCount
+     * @param paintField
+     */
+    public void drawUsingFunction(int startingPosition, int printCount, boolean paintField) {
 
         int x = startingPosition;
         int step = 0;
@@ -79,6 +106,9 @@ public class Board extends JFrame implements MouseListener {
         int loop = loop1;
 
         for(int i=0; i<printCount; i++) {
+
+            int startingPointY = 460;
+            int startingPointY2 = 220;
 
             point = new Point(x, (startingPointY + step));
             System.out.println(point + " " + point2);
@@ -134,7 +164,7 @@ public class Board extends JFrame implements MouseListener {
 
             if(loop>=1 && starArm[2]) {
                 addTile(point2);
-                if(players==4 || players ==6){
+                if(players==4 || players==6){
                     addPawn(point2, new Color(247,19,132),2);
                     circles.get(k-1).take();
                 }
@@ -155,17 +185,19 @@ public class Board extends JFrame implements MouseListener {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        Temp = e.getPoint();
+        temp = e.getPoint();
 
         for (int z=0; z<movablePawns.size(); z++) {
             if ((movablePawns.get(z)).containsCircle(new Point(e.getX(), e.getY()))) {
                 System.out.println("TEST");
+
                 containsCircle = true;
                 savedPosition = new Point(movablePawns.get(z).getCircleCenter());
                 index = z;
                 //Tile temp = circles.get(z);
                 getContentPane().remove(movablePawns.get(z));
                 getContentPane().add(movablePawns.get(z),0);
+
                 return;
                 /*circles.remove(z);
                 circles.add(temp);*/
@@ -177,6 +209,7 @@ public class Board extends JFrame implements MouseListener {
     public void mouseReleased(MouseEvent e) {
         if(containsCircle) {
             Point dropPoint = e.getPoint();
+
             for (int z=0; z<circles.size(); z++) {
                 if ((circles.get(z)).containsCircle(dropPoint)) {
                     /*savedPosition = new Point(movablePawns.get(z).getX(), movablePawns.get(z).getY());
@@ -188,6 +221,7 @@ public class Board extends JFrame implements MouseListener {
                         getContentPane().remove(movablePawns.get(index));
                         movablePawns.get(index).setCircleLocation(circles.get(z).getCircleCenter());
                         circles.get(z).take();
+
                         for(Tile tile: circles) {
                             if(tile.getCircleCenter().equals(savedPosition)) {
                                tile.leave();
@@ -199,6 +233,7 @@ public class Board extends JFrame implements MouseListener {
                         repaint();
                         containsCircle = false;
                         index = -1;
+
                         return;
                     }
                 }
@@ -206,6 +241,7 @@ public class Board extends JFrame implements MouseListener {
                 circles.add(temp);*/
             }
                 System.out.println("GUCCI");
+
                 getContentPane().remove(movablePawns.get(index));
                 movablePawns.get(index).setCircleLocation(savedPosition);
                 getContentPane().add(movablePawns.get(index),0);
@@ -227,16 +263,22 @@ public class Board extends JFrame implements MouseListener {
     }
 
     class MoveTile extends MouseAdapter {
+
         public void mouseDragged(MouseEvent e) {
-            Point TranslateVector = new Point(e.getX() - Temp.x, e.getY() - Temp.y);
-            Temp = e.getPoint();
+            Point translateVector = new Point(e.getX() - temp.x, e.getY() - temp.y);
+            temp = e.getPoint();
 
             if (containsCircle) {
-                movablePawns.get(index).translateCircle(TranslateVector, e);
+                movablePawns.get(index).translateCircle(translateVector, e);
             }
         }
     }
 
+    /**
+     * Adds new Tile into Arraylist with given Point, then draws it on the JFrame.
+     *
+     * @param p  Point containing coordinates of the Tile
+     */
     private void addTile(Point p) {
         circles.add(new Tile(p));
         getContentPane().add(circles.get(k));
@@ -245,6 +287,14 @@ public class Board extends JFrame implements MouseListener {
         repaint();
     }
 
+    /**
+     * Checks whether TODO: ???
+     * Then adds new Pawns into ArrayList with given Point and Color and draws them on the JFrame.
+     *
+     * @param p  Point containing coordinates of the Pawn
+     * @param c  Color of the Pawn
+     * @param arm  TODO: ???
+     */
     private void addPawn(Point p, Color c, int arm) {
         if(arm==startingArm){
             movablePawns.add(new Pawn(p,c));
@@ -259,6 +309,9 @@ public class Board extends JFrame implements MouseListener {
         repaint();
     }
 
+    /**
+     * Sets neighbour for every possible Tile on the board.
+     */
     private void setNeighbours() {
         for(Tile tile: circles) {
             int x1 = tile.getX();
@@ -274,19 +327,19 @@ public class Board extends JFrame implements MouseListener {
                     tile.setNeighbour(0, possibleNeighbour);
                 }
                 if(dx==15 && dy==30) {
-                    tile.setNeighbour(1,possibleNeighbour);
+                    tile.setNeighbour(1, possibleNeighbour);
                 }
                 if(dx==-15 && dy==30) {
-                    tile.setNeighbour(2,possibleNeighbour);
+                    tile.setNeighbour(2, possibleNeighbour);
                 }
                 if(dx == -30 && dy==0) {
-                    tile.setNeighbour(3,possibleNeighbour);
+                    tile.setNeighbour(3, possibleNeighbour);
                 }
                 if(dx==-15 && dy==-30) {
-                    tile.setNeighbour(4,possibleNeighbour);
+                    tile.setNeighbour(4, possibleNeighbour);
                 }
                 if(dx==15 && dy==-30) {
-                    tile.setNeighbour(5,possibleNeighbour);
+                    tile.setNeighbour(5, possibleNeighbour);
                 }
             }
             return;

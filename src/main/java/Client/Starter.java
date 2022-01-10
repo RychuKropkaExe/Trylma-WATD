@@ -6,20 +6,23 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Objects;
 
+/**
+ * Manages clients instances deciding whether to create lobby or waiting rooms.
+ */
 public class Starter extends JFrame implements ActionListener {
 
 
     private static Socket socket;
-    private static String message;
     private static BufferedReader input;
     private static PrintWriter output;
+    private static String message;
 
     private static final int PORT = 9090;
 
     private final JComboBox<String> comboBox;
+    private final JButton submitButton = new JButton("Submit");
 
     private final JCheckBox arm1 = new JCheckBox();
     private final JCheckBox arm2 = new JCheckBox();
@@ -30,11 +33,13 @@ public class Starter extends JFrame implements ActionListener {
 
     private static WaitingScreen screen;
 
-    private final JButton submitButton = new JButton("Submit");
-
     public static int playersNumber;
 
 
+    /**
+     * Creates JFrame with game settings.
+     * Available only for the first player.
+     */
     public Starter() {
         String[] lobbySizes = {"Select number of players", "2", "3", "4", "6"};
 
@@ -59,7 +64,7 @@ public class Starter extends JFrame implements ActionListener {
 
         setTitle("Starter lobby");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(600, 400);
+        setSize(300, 200);
         setLocationRelativeTo(null);
         setLayout(new FlowLayout());
 
@@ -75,6 +80,9 @@ public class Starter extends JFrame implements ActionListener {
         setVisible(true);
     }
 
+    /**
+     * Creates new Thread for each new Player and decides which type of Client shall be opened.
+     */
     public static void listener() {
         new Thread(() -> {
             while(socket.isConnected()) {
@@ -99,6 +107,9 @@ public class Starter extends JFrame implements ActionListener {
         }).start();
     }
 
+    /**
+     * Decides which Board Arms shall be drawn depending of number of players.
+     */
     @Override
     public void actionPerformed(ActionEvent e) {
         if(e.getSource()==submitButton) {
@@ -155,6 +166,9 @@ public class Starter extends JFrame implements ActionListener {
         }
     }
 
+    /**
+     * Returns which Board Arms shall be drawn.
+     */
     private static Boolean[] getArms() throws IOException {
         System.out.println("DOCHODZIMY TUTAJ");
         Boolean[] temp = new Boolean[6];
@@ -163,11 +177,14 @@ public class Starter extends JFrame implements ActionListener {
         }
         return temp;
     }
+
+    //TODO:
     private static int getPlayerID() throws IOException {
-        return  Integer.parseInt(input.readLine());
+        return Integer.parseInt(input.readLine());
     }
+
     private static int getPlayers() throws IOException {
-        return  Integer.parseInt(input.readLine());
+        return Integer.parseInt(input.readLine());
     }
 
     public static void main(String[] args) throws IOException {
