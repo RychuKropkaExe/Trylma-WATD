@@ -25,7 +25,7 @@ public class Board extends JFrame implements MouseListener {
     private int loop1 = 4;
     private int index;
     private int k = 0;
-    private int players = 4;
+    private int players = 2;
     private int pawnsCounter= 0;
     private int startingArm = 2;
     private int movablePawnsCounter = 0;
@@ -37,15 +37,17 @@ public class Board extends JFrame implements MouseListener {
 
 
     public Board(Boolean[] arms, int playerID) {
-        starArm[0] = false;
+        starArm[0] = true;
         starArm[1] = true;
         starArm[2] = true;
-        starArm[3] = false;
+        starArm[3] = true;
         starArm[4] = true;
         starArm[5] = true;
+        startingArm = playerID;
         initFrame();
+        int myInt = (players==2) ? 1:0;
 
-        for(int i=13; i>=1; i--) {
+        for(int i=13+myInt; i>=1; i--) {
             if(i<=4) {
                 drawUsingFunction1(startingPoint, i,true);
             } else {
@@ -193,7 +195,8 @@ public class Board extends JFrame implements MouseListener {
                         getContentPane().add(movablePawns.get(index), 0);
                         validate();
                         repaint();
-
+                        containsCircle = false;
+                        index = -1;
                         return;
                     }
                 }

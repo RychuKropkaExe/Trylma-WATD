@@ -25,6 +25,7 @@ public class Lobby {
      * counts how many players are there in lobby
      */
     private int counter = 0;
+    private int[][] corners = new int[6][2];
     /**
      * Tells if lobby is full
      */
@@ -39,9 +40,39 @@ public class Lobby {
     public Lobby(int number, Player king, Boolean[] arms) throws IOException {
         System.out.println("DZIALA");
         playersQuantity = number;
-
+        setPlayersArms();
         players.add(king);
         players.get(0).sendMessage("Lobby created successfully");
+    }
+
+    private void setPlayersArms() {
+        if(playersQuantity == 2) {
+            corners[0][0] = 0;
+            corners[0][1] = 3;
+            corners[1][0] = 3;
+            corners[1][1] = 0;
+        } else if(playersQuantity == 3) {
+            corners[0][0] = 1;
+            corners[0][1] = 4;
+            corners[1][0] = 3;
+            corners[1][1] = 0;
+            corners[2][0] = 5;
+            corners[2][1] = 2;
+        } else if(playersQuantity == 4) {
+            corners[0][0] = 1;
+            corners[0][1] = 4;
+            corners[1][0] = 2;
+            corners[1][1] = 5;
+            corners[2][0] = 4;
+            corners[2][1] = 1;
+            corners[3][0] = 5;
+            corners[3][1] = 2;
+        } else if(playersQuantity == 6) {
+            for(int i = 0; i<6; i++) {
+                corners[i][0] = i;
+                corners[i][1] = i+3;
+            }
+        }
     }
 
     /**
