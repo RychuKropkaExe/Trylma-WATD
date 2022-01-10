@@ -113,6 +113,9 @@ public class Lobby {
             tempWriter.flush();
 
         }
+        for(int i=0; i<players.size(); i++) {
+            players.get(i).startGame(players);
+        }
     }
 
     /**
