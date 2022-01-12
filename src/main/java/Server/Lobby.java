@@ -1,9 +1,10 @@
 package Server;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import Client.Pakiet;
+import Server.Rules.SimpleRules;
+
+import java.io.*;
+import java.net.Socket;
 import java.util.ArrayList;
 
 /**
@@ -25,26 +26,51 @@ public class Lobby {
      * counts how many players are there in lobby
      */
     private int counter = 0;
-    private int[][] corners = new int[6][2];
+    private final int[][] corners = new int[6][2];
     /**
      * Tells if lobby is full
      */
     private boolean isOpen = true;
-    private Boolean arms[];
+    private final Boolean[] arms;
 
 
-    /**
-     *
-     * @param number a size of lobby that is created
-     * @param king A creator of the lobby, he only differs in lobby not in actual game
-     */
-    public Lobby(int number, Player king, Boolean[] arms) throws IOException {
+    public Lobby(Socket socket) throws IOException, ClassNotFoundException {
+        players.add(new Player(socket, new SimpleRules()));
+        playersQuantity = getPlayersQuantity();
+        arms = getArms();
         System.out.println("DZIALA");
-        playersQuantity = number;
-        this.arms=arms;
         setPlayersArms();
-        players.add(king);
-        players.get(0).sendMessage("Lobby created successfully");
+        //sendToSpecific("Lobby created successfully",0);
+    }
+    public void startGame() throws IOException, ClassNotFoundException {
+        notifyPlayers("The game is starting!");
+        for(int i = 0; i<players.size(); i++) {
+            for(int j=0; j<6; j++) {
+                players.get(i).sendMessage(String.valueOf(arms[j]));
+            }
+            players.get(i).sendMessage(corners[i][0]);
+            players.get(i).sendMessage(playersQuantity);
+            players.get(i).sendMessage(corners[i][1]);
+
+        }
+        for(int i=0; i<players.size(); i++) {
+            players.get(i).startGame(players);
+        }
+    }
+    private int getPlayersQuantity() throws IOException, ClassNotFoundException {
+        players.get(0).sendMessage("[Server]Choose number of players");
+        Pakiet pakiet = players.get(0).getMessage();
+        return pakiet.num;
+    }
+    private Boolean[] getArms() throws IOException, ClassNotFoundException {
+        Boolean[] temp = new Boolean[6];
+
+        for(int i = 0; i<6; i++) {
+            Pakiet pakiet = (Pakiet) players.get(0).getMessage();
+            temp[i] = Boolean.parseBoolean(pakiet.command);
+        }
+
+        return temp;
     }
 
     private void setPlayersArms() {
@@ -79,12 +105,12 @@ public class Lobby {
 
     /**
      * Add player to lobby, and notify other players about it
-     * @param player a player to be added
+     * @param socket a socket used by client
      * @throws IOException
      */
-    public void addPlayer(Player player) throws IOException {
+    public void addPlayer(Socket socket) throws IOException, ClassNotFoundException {
         notifyPlayers("A player has joined the lobby");
-        players.add(player);
+        players.add(new Player(socket, new SimpleRules()));
         sendToSpecific("[Server] You have joined the lobby!", players.size()-1);
         //players.get(counter).sendMessage("[Server] You have joined the lobby!");
         counter++;
@@ -99,24 +125,6 @@ public class Lobby {
     /**
      * starts the game if lobby is full
      */
-    public void startGame() throws IOException {
-        notifyPlayers("The game is starting!");
-        for(int i = 0; i<players.size(); i++) {
-            PrintWriter tempWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(players.get(i).getSocket().getOutputStream())));
-            for(int j=0; j<6; j++) {
-                tempWriter.println(arms[j]);
-                tempWriter.flush();
-            }
-            tempWriter.println(corners[i][0]);
-            tempWriter.flush();
-            tempWriter.println(playersQuantity);
-            tempWriter.flush();
-
-        }
-        for(int i=0; i<players.size(); i++) {
-            players.get(i).startGame(players);
-        }
-    }
 
     /**
      * send some message to all players in lobby
@@ -124,16 +132,16 @@ public class Lobby {
      */
     public void notifyPlayers(String message) throws IOException {
         for(int i = 0; i<players.size();i++) {
-            PrintWriter tempWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(players.get(i).getSocket().getOutputStream())));
-            tempWriter.println(message);
-            tempWriter.flush();
+            Pakiet pakiet = new Pakiet(message);
+            players.get(i).getOutput().writeObject(pakiet);
+            players.get(i).getOutput().flush();
         }
     }
 
     public void sendToSpecific(String message, int i) throws IOException {
-        PrintWriter tempWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(players.get(i).getSocket().getOutputStream())));
-        tempWriter.println(message);
-        tempWriter.flush();
+        Pakiet pakiet = new Pakiet(message);
+        players.get(i).getOutput().writeObject(pakiet);
+        players.get(i).getOutput().flush();;
     }
 
     /**

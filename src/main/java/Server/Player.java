@@ -1,7 +1,12 @@
 package Server;
 
 import Client.DataPackage;
+import Client.Pakiet;
+import Client.Pawn;
+import Client.Tile;
+import Server.Rules.Rules;
 
+import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Array;
 import java.net.DatagramPacket;
@@ -9,21 +14,26 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class Player extends Thread {
-
-    private static BufferedReader input;
-    private static PrintWriter output;
-    private static ObjectOutputStream packageSender;
-    private static ObjectInputStream packageReader;
+    private final ObjectOutputStream packageSender;
+    private final ObjectInputStream packageReader;
     private final Socket client;
     DataPackage dataPackage;
 
+    private ArrayList<Tile> clientTiles;
+    private ArrayList<Pawn> clientPawns;
+    private ArrayList<Pawn> clientMovablePawns;
+    private ArrayList<Point> clientWinPoints;
     private ArrayList<Player> players;
+    private Rules rules;
 
 
-    public Player(Socket socket) throws IOException{
+    public Player(Socket socket, Rules rules) throws IOException{
         this.client = socket;
-        input = new BufferedReader(new InputStreamReader(client.getInputStream()));
-        output = new PrintWriter(new BufferedWriter(new OutputStreamWriter(client.getOutputStream())));
+        this.rules = rules;
+        packageSender = new ObjectOutputStream(socket.getOutputStream());
+        packageReader = new ObjectInputStream(socket.getInputStream());
+        /*packageSender = new ObjectOutputStream(client.getOutputStream());
+        packageReader = new ObjectInputStream(client.getInputStream());*/
         System.out.println(client);
     }
 
@@ -33,8 +43,22 @@ public class Player extends Thread {
             while(client.isConnected()) {
                 dataPackage = (DataPackage) packageReader.readObject();
                 String command = dataPackage.getClientCommand();
-                switch(command) {
-
+                if(command.equals("Validate")) {
+                    if(rules.checkMove(dataPackage)) {
+                    /*clientPawns = dataPackage.getClientPawns();
+                    clientTiles = dataPackage.getClientTiles();
+                    clientMovablePawns = dataPackage.getClientMovablePawns();
+                    clientWinPoints = dataPackage.getWinPoints();*/
+                        dataPackage.setServerResponse("Valid");
+                        packageSender.reset();
+                        packageSender.writeObject(dataPackage);
+                        packageSender.flush();
+                    } else {
+                        dataPackage.setServerResponse("Invalid");
+                        packageSender.reset();
+                        packageSender.writeObject(dataPackage);
+                        packageSender.flush();
+                    }
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -53,25 +77,30 @@ public class Player extends Thread {
         }
     }
 
-    public void sendMessage(String message) {
-        output.print(message);
-        output.print("\n");
-        output.flush();
-    }
-
-    public String getServerMessage() throws IOException {
-        return input.readLine();
-    }
     public void startGame(ArrayList<Player> players) throws IOException {
         this.players = players;
-        input.close();
-        output.close();
-        packageReader = new ObjectInputStream(client.getInputStream());
-        packageSender = new ObjectOutputStream(client.getOutputStream());
-        start();
+        this.start();
     }
 
     public Socket getSocket() {
         return client;
+    }
+    public ObjectOutputStream getOutput() {
+        return packageSender;
+    }
+    public void sendMessage(String message) throws IOException {
+        Pakiet pakiet = new Pakiet(message);
+        packageSender.reset();
+        packageSender.writeObject(pakiet);
+        packageSender.flush();
+    }
+    public void sendMessage(int number) throws IOException, ClassNotFoundException {
+        Pakiet pakiet = new Pakiet(number);
+        packageSender.reset();
+        packageSender.writeObject(pakiet);
+        packageSender.flush();
+    }
+    public Pakiet getMessage() throws IOException, ClassNotFoundException {
+        return (Pakiet)packageReader.readObject();
     }
 }
