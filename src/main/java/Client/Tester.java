@@ -11,6 +11,7 @@ public class Tester {
         starArm[4] = true;
         starArm[5] = true;
 
-        new Board(starArm, 2);
+        new Board(starArm, 0, 2);
+        //new WaitingScreen();
     }
 }

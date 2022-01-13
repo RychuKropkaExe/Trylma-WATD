@@ -55,6 +55,8 @@ public class Board extends JFrame implements MouseListener {
     private ObjectInputStream packageReader;
     private ObjectOutputStream packageSender;
 
+    private Connector connector;
+
     /**
      * Board constructor creates the game board and starts new Thread for every player.
      *
@@ -63,13 +65,13 @@ public class Board extends JFrame implements MouseListener {
      * @param players  Number of players
      * @throws IOException
      */
-    public Board(Boolean[] arms, int playerID,int players, int winArm, ObjectInputStream input, ObjectOutputStream output) throws IOException {
+    public Board(Boolean[] arms, int playerID,int players, int winArm, Connector connector) throws IOException {
         starArm = arms;
         this.winArm = winArm;
         startingArm = playerID;
         this.players = players;
-        packageReader = input;
-        packageSender = output;
+        packageReader = connector.getInput();
+        packageSender = connector.getOutput();
 
         int myInt = (players==2) ? 1 : 0;
 
@@ -132,8 +134,9 @@ public class Board extends JFrame implements MouseListener {
                 while (isPlaying) {
                     DataPackage serverData = (DataPackage)packageReader.readObject();
                     String response = serverData.getServerResponse();
+                    System.out.println(response);
                     if(response.equals("Valid")) {
-                        int MPindex = serverData.getValidatedMPawnIndex();
+                        int MPindex = serverData.getLiftedPawnIndex();
                         int Tindex = serverData.getDropTileIndex();
                         int STindex = serverData.getStartingTileIndex();
                         Point newLocation = tiles.get(Tindex).getCircleCenter();
@@ -153,6 +156,11 @@ public class Board extends JFrame implements MouseListener {
                                 pawn.setCircleLocation(newPawnL);
                             }
                         }
+                    }
+                    if(response.equals("Invalid")) {
+                        int MPindex = serverData.getLiftedPawnIndex();
+                        int STindex = serverData.getStartingTileIndex();
+                        movablePawns.get(MPindex).setCircleLocation(tiles.get(STindex).getCircleCenter());
 
                     }
                 }
@@ -281,6 +289,7 @@ public class Board extends JFrame implements MouseListener {
                 liftedPawnIndex = z;
                 for(int i = 0; i< tiles.size(); i++) {
                     if(tiles.get(i).getCircleCenter()==savedPosition) {
+                        System.out.println(savedPosition);
                         startingTileIndex=i;
                         break;
                     }
@@ -309,6 +318,7 @@ public class Board extends JFrame implements MouseListener {
                     dropTileIndex = z;
                     try {
                         sendRequest("Validate");
+                        return;
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
@@ -337,14 +347,6 @@ public class Board extends JFrame implements MouseListener {
                 /*circles.remove(z);
                 circles.add(temp);*/
             }
-/*                System.out.println("GUCCI");
-
-                getContentPane().remove(movablePawns.get(liftedPawnIndex));
-                movablePawns.get(liftedPawnIndex).setCircleLocation(savedPosition);
-                getContentPane().add(movablePawns.get(liftedPawnIndex),0);
-                validate();
-                repaint();
-        }*/
         containsCircle = false;
         liftedPawnIndex = -1;
     }
