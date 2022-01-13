@@ -6,6 +6,7 @@ import Client.Pawn;
 import Client.Tile;
 import Server.Rules.Rules;
 
+import javax.xml.crypto.Data;
 import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Array;
@@ -24,7 +25,7 @@ public class Player extends Thread {
     private ArrayList<Pawn> clientMovablePawns;
     private ArrayList<Point> clientWinPoints;
     private ArrayList<Player> players;
-    private Rules rules;
+    private final Rules rules;
 
 
     public Player(Socket socket, Rules rules) throws IOException{
@@ -45,14 +46,11 @@ public class Player extends Thread {
                 String command = dataPackage.getClientCommand();
                 if(command.equals("Validate")) {
                     if(rules.checkMove(dataPackage)) {
-                    /*clientPawns = dataPackage.getClientPawns();
-                    clientTiles = dataPackage.getClientTiles();
-                    clientMovablePawns = dataPackage.getClientMovablePawns();
-                    clientWinPoints = dataPackage.getWinPoints();*/
                         dataPackage.setServerResponse("Valid");
                         packageSender.reset();
                         packageSender.writeObject(dataPackage);
                         packageSender.flush();
+                        updatePlayers(dataPackage);
                     } else {
                         dataPackage.setServerResponse("Invalid");
                         packageSender.reset();
@@ -81,19 +79,35 @@ public class Player extends Thread {
         this.players = players;
         this.start();
     }
+    private void updatePlayers(DataPackage dataPackage) throws IOException {
+        DataPackage temp = dataPackage;
+        for(Player player : players) {
+            if(!player.equals(this)) {
+                temp.setServerResponse("Update");
+                player.getOutput().reset();
+                player.getOutput().writeObject(temp);
+                player.getOutput().flush();
+            }
+        }
+
+
+    }
 
     public Socket getSocket() {
         return client;
     }
+
     public ObjectOutputStream getOutput() {
         return packageSender;
     }
+
     public void sendMessage(String message) throws IOException {
         Pakiet pakiet = new Pakiet(message);
         packageSender.reset();
         packageSender.writeObject(pakiet);
         packageSender.flush();
     }
+
     public void sendMessage(int number) throws IOException, ClassNotFoundException {
         Pakiet pakiet = new Pakiet(number);
         packageSender.reset();

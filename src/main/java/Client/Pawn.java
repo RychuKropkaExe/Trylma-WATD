@@ -5,18 +5,27 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Ellipse2D;
 
+/**
+ * Creates and draws Pawns
+ */
 public class Pawn extends JComponent {
 
 
-    private Point CircleCenter;
+    private final int circleRadius;
+    private Point circleCenter;
     private Color circleColor;
-    private final int CircleRadius;
 
 
+    /**
+     * Sets Pawn parameters.
+     *
+     * @param a  Point containing center of the Pawn coordinates
+     * @param c  Pawn Color
+     */
     public Pawn(Point a, Color c) {
-        CircleRadius = 25;
+        circleRadius = 25;
         circleColor = c;
-        CircleCenter = new Point((int)a.getX(), (int)a.getY());
+        circleCenter = new Point((int)a.getX(), (int)a.getY());
     }
 
     @Override
@@ -25,35 +34,62 @@ public class Pawn extends JComponent {
         doDrawingCircle(g);
     }
 
+    /**
+     * Draws the Pawn with Border and Antialiasing.
+     */
     private void doDrawingCircle(Graphics g) {
         Graphics2D c2D = (Graphics2D) g;
-        c2D.setColor(circleColor);
+        Ellipse2D pawn = new Ellipse2D.Float(circleCenter.x, circleCenter.y, circleRadius, circleRadius);
+
+        RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        rh.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        c2D.setRenderingHints(rh);
+
+        c2D.setColor(Color.BLACK);
         c2D.setStroke(new BasicStroke(2));
-        c2D.fill(new Ellipse2D.Float(CircleCenter.x, CircleCenter.y, CircleRadius, CircleRadius));
+        c2D.draw(pawn);
+        c2D.setColor(circleColor);
+        c2D.fill(pawn);
     }
 
+    /**
+     * Set Pawn Color.
+     *
+     * @param c  New Color
+     */
     public void setColor(Color c) {
         circleColor = c;
         repaint();
     }
 
-    public boolean containsCircle(Point a){
-        return (new Ellipse2D.Float(CircleCenter.x,CircleCenter.y,CircleRadius,CircleRadius).contains(a));
+    /**
+     * Checks whether given Point is inside any Pawn.
+     *
+     * @param point  Checked Point
+     * @return  True when contains, false if not
+     */
+    public boolean containsCircle(Point point){
+        return (new Ellipse2D.Float(circleCenter.x, circleCenter.y, circleRadius, circleRadius).contains(point));
     }
 
-    public void translateCircle(Point CircleP, MouseEvent e){
-        CircleCenter = new Point(CircleP.x+CircleCenter.x,CircleP.y+CircleCenter.y);
+    /**
+     * Changes the center Point of the Pawn to new value.
+     *
+     * @param circleP  New center Point
+     */
+    public void translateCircle(Point circleP, MouseEvent e){
+        circleCenter = new Point(circleP.x+circleCenter.x,circleP.y+circleCenter.y);
         revalidate();
         repaint();
     }
 
     public void setCircleLocation(Point p) {
-        CircleCenter = p;
+        circleCenter = p;
         revalidate();
         repaint();
     }
 
     public Point getCircleCenter() {
-        return CircleCenter;
+        return circleCenter;
     }
 }

@@ -11,9 +11,6 @@ public class Server {
     private static final ArrayList<Lobby> lobbies = new ArrayList<>();
     private static final ArrayList<Socket> sockets = new ArrayList<>();
 
-    private static CommandHandler commandHandler;
-    private static Player king;
-
     private static final int PORT = 9090;
     private static int lobbyCount = 0;
 

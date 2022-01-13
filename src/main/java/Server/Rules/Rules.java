@@ -1,8 +1,11 @@
 package Server.Rules;
 
+
+import Client.DataPackage;
+
 public interface Rules{
-    public boolean checkIfMoveIsValid();
-    public void getBoard();
-    public void setBoardVariables();
-    public void validateMove();
+    boolean checkMove(DataPackage dataPackage);
+    void getBoard();
+    void setBoardVariables(DataPackage data);
+    boolean validateMove();
 }
