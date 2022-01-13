@@ -39,12 +39,12 @@ public class Board extends JFrame implements MouseListener {
     private int startingPoint = 550;
     private int k = 0;
     private int loop1 = 4;
-    private int pawnsCounter= 0;
-    private int movablePawnsCounter = 0;
-    private int liftedPawnIndex;
-    private int startingTileIndex;
-    private int dropTileIndex;
-    private int winArm;
+    private volatile int pawnsCounter= 0;
+    private volatile int movablePawnsCounter = 0;
+    private volatile int liftedPawnIndex;
+    private volatile int startingTileIndex;
+    private volatile int dropTileIndex;
+    private volatile int winArm;
 
     private Socket socket;
 
@@ -143,12 +143,13 @@ public class Board extends JFrame implements MouseListener {
                         tiles.get(STindex).leave();
                         tiles.get(Tindex).take();
                         movablePawns.get(MPindex).setCircleLocation(newLocation);
+                        containsCircle = false;
                     }
                     if(response.equals("Update")) {
-                        Point oldPawnL = serverData.getOldPawnLocation();
-                        Point newPawnL = serverData.getNewPawnLocation();
                         int Tindex = serverData.getDropTileIndex();
                         int STindex = serverData.getStartingTileIndex();
+                        Point oldPawnL = serverData.getClientTiles().get(STindex).getCircleCenter();
+                        Point newPawnL = serverData.getClientTiles().get(Tindex).getCircleCenter();
                         tiles.get(STindex).leave();
                         tiles.get(Tindex).take();
                         for(Pawn pawn : pawns) {
@@ -156,11 +157,13 @@ public class Board extends JFrame implements MouseListener {
                                 pawn.setCircleLocation(newPawnL);
                             }
                         }
+                        containsCircle = false;
                     }
                     if(response.equals("Invalid")) {
                         int MPindex = serverData.getLiftedPawnIndex();
                         int STindex = serverData.getStartingTileIndex();
                         movablePawns.get(MPindex).setCircleLocation(tiles.get(STindex).getCircleCenter());
+                        containsCircle = false;
 
                     }
                 }
@@ -171,7 +174,7 @@ public class Board extends JFrame implements MouseListener {
     }
     private void sendRequest(String command) throws IOException {
         DataPackage clientData = new DataPackage(tiles, pawns, movablePawns,winPoints);
-        if(command.equals("skip")) {
+        if(command.equals("Skip")) {
             clientData.setClientCommand(command);
         } else {
             clientData.setClientCommand(command);
@@ -204,7 +207,6 @@ public class Board extends JFrame implements MouseListener {
             int startingPointY2 = 220;
 
             point = new Point(x, (startingPointY + step));
-            System.out.println(point + " " + point2);
             point2 = new Point(x, (startingPointY2 + step2));
 
             if(i<9 || starArm[3]) {
@@ -288,9 +290,10 @@ public class Board extends JFrame implements MouseListener {
                 savedPosition = new Point(movablePawns.get(z).getCircleCenter());
                 liftedPawnIndex = z;
                 for(int i = 0; i< tiles.size(); i++) {
-                    if(tiles.get(i).getCircleCenter()==savedPosition) {
+                    if(tiles.get(i).getCircleCenter().equals(savedPosition)) {
                         System.out.println(savedPosition);
                         startingTileIndex=i;
+                        System.out.println(startingTileIndex);
                         break;
                     }
                 }
@@ -342,8 +345,10 @@ public class Board extends JFrame implements MouseListener {
                         liftedPawnIndex = -1;
 
                         return;*/
-                    }
                 }
+            }
+                movablePawns.get(liftedPawnIndex).setCircleLocation(tiles.get(startingTileIndex).getCircleCenter());
+                containsCircle = false;
                 /*circles.remove(z);
                 circles.add(temp);*/
             }
@@ -395,19 +400,25 @@ public class Board extends JFrame implements MouseListener {
      * @param arm  TODO: ???
      */
     private void addPawn(Point p, Color c, int arm) {
+        int aCount=0;
         if(arm==startingArm){
             movablePawns.add(new Pawn(p,c));
             getContentPane().add(movablePawns.get(movablePawnsCounter),0);
             movablePawnsCounter++;
+            aCount++;
         } else if(arm==winArm) {
             winPoints.add(p);
             pawns.add(new Pawn(p, c));
             getContentPane().add(pawns.get(pawnsCounter), 0);
             pawnsCounter++;
+            aCount++;
         } else {
             pawns.add(new Pawn(p, c));
             getContentPane().add(pawns.get(pawnsCounter), 0);
             pawnsCounter++;
+        }
+        if(aCount>1) {
+            System.out.println("UMMMMMMMMMMMMMMM?");
         }
         validate();
         repaint();
@@ -418,12 +429,12 @@ public class Board extends JFrame implements MouseListener {
      */
     private void setNeighbours() {
         for(Tile tile: tiles) {
-            int x1 = tile.getX();
-            int y1 = tile.getY();
+            int x1 = (int)tile.getCircleCenter().getX();
+            int y1 = (int)tile.getCircleCenter().getY();
 
             for(Tile possibleNeighbour: tiles) {
-                int x2 = possibleNeighbour.getX();
-                int y2 = possibleNeighbour.getY();
+                int x2 = (int)possibleNeighbour.getCircleCenter().getX();
+                int y2 = (int)possibleNeighbour.getCircleCenter().getY();
                 int dx = x1-x2;
                 int dy = y1-y2;
 
@@ -446,7 +457,6 @@ public class Board extends JFrame implements MouseListener {
                     tile.setNeighbour(5, possibleNeighbour);
                 }
             }
-            return;
         }
     }
 }
