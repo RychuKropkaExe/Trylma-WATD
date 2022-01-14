@@ -53,8 +53,6 @@ public class SimpleRules implements Rules{
     @Override
     public boolean validateMove() {
         stillMove=false;
-        System.out.println(startingTileIndex);
-        System.out.println(dropTileIndex);
         Tile tile1 = clientTiles.get(startingTileIndex);
         Tile tile2 = clientTiles.get(dropTileIndex);
         if(tile2.isTaken()) {
@@ -102,8 +100,6 @@ public class SimpleRules implements Rules{
                         if(possibleJump.getNeighbour(j) != null) {
                             int dx2 = (int)(tile2.getCircleCenter().getX() - possibleJump.getNeighbour(j).getCircleCenter().getX());
                             int dy2 = (int)(tile2.getCircleCenter().getY() - possibleJump.getNeighbour(j).getCircleCenter().getY());
-                            System.out.println(dx + " " +dy);
-                            System.out.println(dx2 + " " +dy2);
                             if(2*dx==dx2 && 2*dy==dy2) {
                                 return !possibleJump.getNeighbour(j).isTaken();
                             }

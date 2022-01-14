@@ -44,6 +44,7 @@ public class Lobby {
         //sendToSpecific("Lobby created successfully",0);
     }
     public void startGame() throws IOException, ClassNotFoundException {
+        int startingPlayer = (int)(Math.random() * playersQuantity);
         notifyPlayers("The game is starting!");
         for(int i = 0; i<players.size(); i++) {
             for(int j=0; j<6; j++) {
@@ -52,10 +53,10 @@ public class Lobby {
             players.get(i).sendMessage(corners[i][0]);
             players.get(i).sendMessage(playersQuantity);
             players.get(i).sendMessage(corners[i][1]);
-            players.get(i).sendMessage(startingPlayer);
+            System.out.println(startingPlayer);
+            players.get(i).sendMessage(corners[startingPlayer][0]);
 
         }
-        int startingPlayer = (int)(Math.random() * playersQuantity);
         for(int i=0; i<players.size(); i++) {
             players.get(i).startGame(players,corners);
         }

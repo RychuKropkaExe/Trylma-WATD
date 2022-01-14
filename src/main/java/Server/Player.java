@@ -26,11 +26,13 @@ public class Player extends Thread {
     private ArrayList<Point> clientWinPoints;
     private ArrayList<Player> players;
     private final Rules rules;
+    private int[][] corners;
 
 
     public Player(Socket socket, Rules rules) throws IOException{
         this.client = socket;
         this.rules = rules;
+        this.corners=corners;
         packageSender = new ObjectOutputStream(socket.getOutputStream());
         packageReader = new ObjectInputStream(socket.getInputStream());
         /*packageSender = new ObjectOutputStream(client.getOutputStream());
@@ -46,11 +48,21 @@ public class Player extends Thread {
                 String command = dataPackage.getClientCommand();
                 if(command.equals("Validate")) {
                     if(rules.checkMove(dataPackage)) {
-                        dataPackage.setServerResponse("Valid");
-                        packageSender.reset();
-                        packageSender.writeObject(dataPackage);
-                        packageSender.flush();
-                        updatePlayers(dataPackage);
+                        if(rules.stillMove()) {
+                            dataPackage.setServerResponse("Valid & move");
+                            packageSender.reset();
+                            packageSender.writeObject(dataPackage);
+                            packageSender.flush();
+                            updatePlayers(dataPackage);
+                        } else {
+                            dataPackage.setServerResponse("Valid");
+                            dataPackage.setCurrentPlayer(nextPlayer(dataPackage.getCurrentPlayer()));
+                            packageSender.reset();
+                            packageSender.writeObject(dataPackage);
+                            packageSender.flush();
+                            updatePlayers(dataPackage);
+
+                        }
                     } else {
                         dataPackage.setServerResponse("Invalid");
                         packageSender.reset();
@@ -74,11 +86,32 @@ public class Player extends Thread {
             }
         }
     }
+    private int nextPlayer(int player) {
+        int current = 0;
+        for(int i = 0; i<players.size(); i++) {
+            if(corners[i][0]==player) {
+                current=i;
+                break;
+            }
+        }
+        for(int i=0;i<players.size(); i++) {
+            if(corners[i][0]==player) {
+                if(current+1==players.size()) {
+                    return corners[0][0];
+                } else {
+                    return corners[current+1][0];
+                }
+            }
+        }
+        return corners[0][0];
+    }
 
-    public void startGame(ArrayList<Player> players) throws IOException {
+    public void startGame(ArrayList<Player> players,int[][] corners) throws IOException {
+        this.corners=corners;
         this.players = players;
         this.start();
     }
+
     private void updatePlayers(DataPackage dataPackage) throws IOException {
         DataPackage temp = dataPackage;
         for(Player player : players) {
