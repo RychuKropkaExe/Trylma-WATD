@@ -5,7 +5,7 @@ import Client.DataPackage;
 
 public interface Rules{
     boolean checkMove(DataPackage dataPackage);
-    void getBoard();
+    boolean stillMove();
     void setBoardVariables(DataPackage data);
     boolean validateMove();
 }

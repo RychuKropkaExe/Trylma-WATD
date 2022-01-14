@@ -32,6 +32,7 @@ public class Lobby {
      */
     private boolean isOpen = true;
     private final Boolean[] arms;
+    int startingPlayer;
 
 
     public Lobby(Socket socket) throws IOException, ClassNotFoundException {
@@ -51,10 +52,12 @@ public class Lobby {
             players.get(i).sendMessage(corners[i][0]);
             players.get(i).sendMessage(playersQuantity);
             players.get(i).sendMessage(corners[i][1]);
+            players.get(i).sendMessage(startingPlayer);
 
         }
+        int startingPlayer = (int)(Math.random() * playersQuantity);
         for(int i=0; i<players.size(); i++) {
-            players.get(i).startGame(players);
+            players.get(i).startGame(players,corners);
         }
     }
     private int getPlayersQuantity() throws IOException, ClassNotFoundException {
