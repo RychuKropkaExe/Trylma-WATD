@@ -11,9 +11,9 @@ import java.awt.geom.Ellipse2D;
 public class Pawn extends JComponent {
 
 
+    private final Color circleColor;
     private final int circleRadius;
     private Point circleCenter;
-    private Color circleColor;
 
 
     /**
@@ -50,16 +50,6 @@ public class Pawn extends JComponent {
         c2D.draw(pawn);
         c2D.setColor(circleColor);
         c2D.fill(pawn);
-    }
-
-    /**
-     * Set Pawn Color.
-     *
-     * @param c  New Color
-     */
-    public void setColor(Color c) {
-        circleColor = c;
-        repaint();
     }
 
     /**

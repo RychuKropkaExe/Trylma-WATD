@@ -16,6 +16,7 @@ public class Tile extends JComponent {
     /** Variable containing state of the Tile */
     public boolean isTaken = false;
 
+
     /**
      * Sets Tile parameters.
      *
@@ -70,10 +71,6 @@ public class Tile extends JComponent {
         return neighbours[index];
     }
 
-    public Color getCircleColor() {
-        return circleColor;
-    }
-
     /**
      * Changes the state of Tile to be taken, preventing Pawns to be moved onto it.
      */
@@ -86,6 +83,10 @@ public class Tile extends JComponent {
      */
     public void leave() {
         isTaken = false;
+    }
+
+    public boolean isTaken() {
+        return isTaken;
     }
 
     /**

@@ -10,12 +10,13 @@ public class WaitingScreen extends JFrame {
 
     public WaitingScreen() {
         JLabel label = new JLabel("Waiting for other players");
-        setLayout(new FlowLayout());
-        add(label);
+
+        setTitle("Waiting");
         setSize(200, 100);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        //pack();
+        setLayout(new FlowLayout());
+        add(label);
         setVisible(true);
     }
 }

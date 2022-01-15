@@ -14,14 +14,9 @@ import java.util.Objects;
 public class Starter extends JFrame implements ActionListener {
 
 
-    private static Socket socket;
-    private static BufferedReader input;
-    private static PrintWriter output;
-    private static String message;
+    private Connector connector;
 
-    private static final int PORT = 9090;
-
-    private final JComboBox<String> comboBox;
+    private JComboBox<String> comboBox;
     private final JButton submitButton = new JButton("Submit");
 
     private final JCheckBox arm1 = new JCheckBox();
@@ -36,11 +31,18 @@ public class Starter extends JFrame implements ActionListener {
     public static int playersNumber;
 
 
+    public Starter(Connector connector) throws IOException {
+        this.connector = connector;
+
+        listener();
+    }
+
+
     /**
      * Creates JFrame with game settings.
      * Available only for the first player.
      */
-    public Starter() {
+    private void initFrame(){
         String[] lobbySizes = {"Select number of players", "2", "3", "4", "6"};
 
         arm1.setText("Draw bottom arm");
@@ -83,13 +85,17 @@ public class Starter extends JFrame implements ActionListener {
     /**
      * Creates new Thread for each new Player and decides which type of Client shall be opened.
      */
-    public static void listener() {
+    public void listener() {
         new Thread(() -> {
-            while(socket.isConnected()) {
+            while(connector.getSocket().isConnected()) {
                 try {
-                    message = input.readLine();
-                    if (message.equals("[Server]Choose number of players")) {
-                        new Starter();
+                    Packet a = (Packet)connector.getInput().readObject();
+                    String message = a.command;
+
+                    System.out.println(a.command);
+
+                    if(message.equals("[Server]Choose number of players")) {
+                        initFrame();
                     } else if (message.equals("[Server] You have joined the lobby!")) {
                         System.out.println("You have joined");
                         screen = new WaitingScreen();
@@ -98,11 +104,20 @@ public class Starter extends JFrame implements ActionListener {
                     } else if(message.equals("The game is starting!")) {
                         System.out.println("Umm gucci?");
                         screen.dispose();
-                        new Board(getArms(), getPlayerID(), getPlayers(), socket);
+                        System.out.println("WIDZISZ MNIE?");
+                        break;
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+            }
+
+            try {
+                new Board(getArms(), getPlayerID(), getPlayers(),
+                          getWinArm(), getStartingPlayer(), connector);
+                connector = null;
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }).start();
     }
@@ -114,7 +129,7 @@ public class Starter extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if(e.getSource()==submitButton) {
             if(comboBox.getSelectedItem()!="Select number of players") {
-                String[] arms = new String[6];//String selected = (String) comboBox.getSelectedItem();
+                String[] arms = new String[6];
                 playersNumber = Integer.parseInt((String) Objects.requireNonNull(comboBox.getSelectedItem()));
 
                 arms[0] = String.valueOf(arm1.isSelected());
@@ -125,41 +140,60 @@ public class Starter extends JFrame implements ActionListener {
                 arms[5] = String.valueOf(arm6.isSelected());
 
                 if(playersNumber==2) {
-                    arms[0]=String.valueOf(true);
-                    arms[3]=String.valueOf(true);
+                    arms[0] = String.valueOf(true);
+                    arms[3] = String.valueOf(true);
                 }
                 if(playersNumber==3) {
-                    arms[0]=String.valueOf(true);
-                    arms[1]=String.valueOf(true);
-                    arms[2]=String.valueOf(true);
-                    arms[3]=String.valueOf(true);
-                    arms[4]=String.valueOf(true);
-                    arms[5]=String.valueOf(true);
+                    arms[0] = String.valueOf(true);
+                    arms[1] = String.valueOf(true);
+                    arms[2] = String.valueOf(true);
+                    arms[3] = String.valueOf(true);
+                    arms[4] = String.valueOf(true);
+                    arms[5] = String.valueOf(true);
                 }
                 if(playersNumber==4) {
-                    arms[1]=String.valueOf(true);
-                    arms[2]=String.valueOf(true);
-                    arms[4]=String.valueOf(true);
-                    arms[5]=String.valueOf(true);
+                    arms[1] = String.valueOf(true);
+                    arms[2] = String.valueOf(true);
+                    arms[4] = String.valueOf(true);
+                    arms[5] = String.valueOf(true);
                 }
                 if(playersNumber==6) {
-                    arms[0]=String.valueOf(true);
-                    arms[1]=String.valueOf(true);
-                    arms[2]=String.valueOf(true);
-                    arms[3]=String.valueOf(true);
-                    arms[4]=String.valueOf(true);
-                    arms[5]=String.valueOf(true);
+                    arms[0] = String.valueOf(true);
+                    arms[1] = String.valueOf(true);
+                    arms[2] = String.valueOf(true);
+                    arms[3] = String.valueOf(true);
+                    arms[4] = String.valueOf(true);
+                    arms[5] = String.valueOf(true);
                 }
-                output.println(playersNumber);
+                try {
+                    Packet packet = new Packet(playersNumber);
+
+                    connector.getOutput().writeObject(packet);
+                    connector.getOutput().flush();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
 
                 for (int i = 0; i < 6; i++) {
                     System.out.println(arms[i]);
-                    output.println(arms[i]);
-                    output.flush();
+                    Packet packet = new Packet(String.valueOf(arms[i]));
+
+                    try {
+                        connector.getOutput().writeObject(packet);
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+
+                    try {
+                        connector.getOutput().flush();
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
                 }
 
                 System.out.println(playersNumber);
                 System.out.println("Started");
+
                 dispose();
                 screen = new WaitingScreen();
             }
@@ -169,35 +203,35 @@ public class Starter extends JFrame implements ActionListener {
     /**
      * Returns which Board Arms shall be drawn.
      */
-    private static Boolean[] getArms() throws IOException {
+    private Boolean[] getArms() throws IOException, ClassNotFoundException {
         System.out.println("DOCHODZIMY TUTAJ");
         Boolean[] temp = new Boolean[6];
+
         for(int i = 0; i<6; i++) {
-            temp[i] = Boolean.parseBoolean(input.readLine());
+            Packet packet = (Packet)connector.getInput().readObject();
+            temp[i] = Boolean.parseBoolean(packet.command);
         }
+
         return temp;
     }
 
-    //TODO:
-    private static int getPlayerID() throws IOException {
-        return Integer.parseInt(input.readLine());
+
+    private int getStartingPlayer() throws IOException, ClassNotFoundException {
+        Packet packet = (Packet) connector.getInput().readObject();
+        return packet.num;
     }
 
-    private static int getPlayers() throws IOException {
-        return Integer.parseInt(input.readLine());
+    private int getPlayerID() throws IOException, ClassNotFoundException {
+        Packet packet = (Packet) connector.getInput().readObject();
+        return packet.num;
+    }
+    private int getWinArm() throws IOException, ClassNotFoundException {
+        Packet packet = (Packet) connector.getInput().readObject();
+        return packet.num;
     }
 
-    public static void main(String[] args) throws IOException {
-
-        socket = new Socket("localhost", PORT);
-        output = new PrintWriter( new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
-        input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-        System.out.println(socket);
-
-        listener();
-
-        while(socket.isConnected()) {
-        }
+    private int getPlayers() throws IOException, ClassNotFoundException {
+        Packet packet = (Packet) connector.getInput().readObject();
+        return packet.num;
     }
 }
