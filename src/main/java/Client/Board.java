@@ -8,7 +8,6 @@ import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.Socket;
 import java.util.ArrayList;
 
 /**
@@ -17,7 +16,7 @@ import java.util.ArrayList;
 public class Board extends JFrame implements MouseListener {
 
 
-    /** ArrayLists containing tiles and pawns that create the board. */
+    /** ArrayLists containing Tiles and Pawns that create the board. */
     private final ArrayList<Tile> tiles = new ArrayList<>();
     private final ArrayList<Pawn> pawns = new ArrayList<>();
     private final ArrayList<Pawn> movablePawns = new ArrayList<>();
@@ -27,19 +26,18 @@ public class Board extends JFrame implements MouseListener {
 
     private Point temp;
 
+    /** Variables used to initialize the Board. */
     private final int startingArm;
     private final int players;
-    private int startingPoint = 550;
-    private int k = 0;
-    private int loop1 = 4;
     private volatile int pawnsCounter= 0;
     private volatile int movablePawnsCounter = 0;
     private volatile int liftedPawnIndex;
     private volatile int startingTileIndex;
     private volatile int dropTileIndex;
     private volatile int winArm;
-
-    private final JButton skipButton = new JButton("Skip");
+    private int startingPoint = 550;
+    private int k = 0;
+    private int loop1 = 4;
 
     private final Boolean[] starArm;
     private final boolean isPlaying = true;
@@ -48,6 +46,7 @@ public class Board extends JFrame implements MouseListener {
     private ObjectInputStream packageReader;
     private ObjectOutputStream packageSender;
 
+    private final JButton skipButton = new JButton("Skip");
     private JPanel panel;
     private JTextArea textArea;
 
@@ -58,6 +57,9 @@ public class Board extends JFrame implements MouseListener {
      * @param arms  Array with information which arms shall be drawn
      * @param playerID  ID of staring player
      * @param players  Number of players
+     * @param winArm  Winning base
+     * @param startingPlayer  First player index
+     * @param connector  Connector object for sending packages
      * @throws IOException
      */
     public Board(Boolean[] arms, int playerID, int players, int winArm, int startingPlayer, Connector connector) throws IOException {
@@ -151,7 +153,9 @@ public class Board extends JFrame implements MouseListener {
         setVisible(true);
     }
 
-
+    /**
+     * Starts Player's Thread and processes Data Packages from Server.
+     */
     private void startGame() {
         new Thread(()->{
             try {
@@ -227,7 +231,12 @@ public class Board extends JFrame implements MouseListener {
         }).start();
     }
 
-
+    /**
+     * Sends command for Server to process.
+     *
+     * @param command  Command to process
+     * @throws IOException
+     */
     private void sendRequest(String command) throws IOException {
         DataPackage clientData = new DataPackage(tiles, pawns, movablePawns,winPoints);
 
@@ -248,11 +257,6 @@ public class Board extends JFrame implements MouseListener {
 
     /**
      * Generates the game board and sets each Player homes.
-     *
-     * TODO:
-     * @param startingPosition
-     * @param printCount
-     * @param paintField
      */
     public void drawUsingFunction(int startingPosition, int printCount, boolean paintField) {
 
@@ -262,7 +266,6 @@ public class Board extends JFrame implements MouseListener {
         int loop = loop1;
 
         for(int i = 0; i<printCount; i++) {
-
             int startingPointY = 460;
             int startingPointY2 = 220;
             Point point = new Point(x, (startingPointY + step));
@@ -270,7 +273,7 @@ public class Board extends JFrame implements MouseListener {
 
             if(i<9 || starArm[3]) {
                 addTile(point);
-                if(i>=9 && (players==2 || players == 3 || players ==6)){
+                if(i>=9 && (players==2 || players==3 || players==6)){
                     addPawn(point, new Color(89,0,165), 3);
                     tiles.get(k-1).take();
                 }
@@ -408,6 +411,9 @@ public class Board extends JFrame implements MouseListener {
 
     }
 
+    /**
+     * Class used for implementing dragging Pawn across the Board.
+     */
     class MoveTile extends MouseAdapter {
 
         public void mouseDragged(MouseEvent e) {
@@ -434,12 +440,13 @@ public class Board extends JFrame implements MouseListener {
     }
 
     /**
-     * Checks whether TODO: ???
-     * Then adds new Pawns into ArrayList with given Point and Color and draws them on the JFrame.
+     * Checks for Player's home
+     * then adds new Pawns into ArrayList with given Point and Color
+     * and draws them on the JFrame.
      *
      * @param p  Point containing coordinates of the Pawn
      * @param c  Color of the Pawn
-     * @param arm  TODO: ???
+     * @param arm  Board's arm
      */
     private void addPawn(Point p, Color c, int arm) {
         int aCount = 0;

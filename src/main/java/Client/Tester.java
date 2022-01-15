@@ -12,6 +12,5 @@ public class Tester {
         starArm[5] = true;
 
         new Board(starArm, 0, 2);
-        //new WaitingScreen();
     }
 }

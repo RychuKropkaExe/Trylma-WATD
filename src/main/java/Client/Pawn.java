@@ -6,7 +6,7 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Ellipse2D;
 
 /**
- * Creates and draws Pawns
+ * Creates and draws Pawns.
  */
 public class Pawn extends JComponent {
 

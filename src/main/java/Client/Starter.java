@@ -5,7 +5,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
-import java.net.Socket;
 import java.util.Objects;
 
 /**
@@ -13,25 +12,28 @@ import java.util.Objects;
  */
 public class Starter extends JFrame implements ActionListener {
 
-
+    private static WaitingScreen screen;
     private Connector connector;
 
-    private JComboBox<String> comboBox;
     private final JButton submitButton = new JButton("Submit");
-
     private final JCheckBox arm1 = new JCheckBox();
     private final JCheckBox arm2 = new JCheckBox();
     private final JCheckBox arm3 = new JCheckBox();
     private final JCheckBox arm4 = new JCheckBox();
     private final JCheckBox arm5 = new JCheckBox();
     private final JCheckBox arm6 = new JCheckBox();
-
-    private static WaitingScreen screen;
+    private JComboBox<String> comboBox;
 
     public static int playersNumber;
 
 
-    public Starter(Connector connector) throws IOException {
+    /**
+     * Constructor used to initialize Connector object
+     * and running new Thread in listener method.
+     *
+     * @param connector
+     */
+    public Starter(Connector connector) {
         this.connector = connector;
 
         listener();

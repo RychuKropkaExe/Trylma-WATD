@@ -4,9 +4,14 @@ import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+/**
+ * Creates packages with data to send between Client and Server
+ * that contains actual info about state of the game.
+ */
 public class DataPackage implements Serializable {
 
 
+    /** Arraylists with Tiles and Pawns used to play with */
     private final ArrayList<Tile> clientTiles;
     private final ArrayList<Pawn> clientPawns;
     private final ArrayList<Pawn> clientMovablePawns;
@@ -23,6 +28,14 @@ public class DataPackage implements Serializable {
     private boolean skipFlag;
 
 
+    /**
+     * Creates new Package with game info.
+     *
+     * @param tiles  Arraylist of Board Tiles
+     * @param pawns  Arraylist of all Players Pawns
+     * @param movablePawns  Arraylist of given Player Pawns
+     * @param winPoints  Arraylist of given Player winning Tiles
+     */
     public DataPackage(ArrayList<Tile> tiles, ArrayList<Pawn> pawns, ArrayList<Pawn> movablePawns, ArrayList<Point> winPoints) {
         clientTiles = tiles;
         clientPawns = pawns;

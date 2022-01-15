@@ -4,9 +4,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 
+/**
+ * Creates and draws Tiles.
+ */
 public class Tile extends JComponent {
 
-
+    /** Array containing all neighbours of the Tile. */
     private final Tile[] neighbours = new Tile[6];
 
     private final Point circleCenter;
