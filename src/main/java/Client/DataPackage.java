@@ -17,12 +17,17 @@ public class DataPackage implements Serializable {
 
     private Point oldPawnLocation;
     private Point newPawnLocation;
+    private Point validatedPawnLocation;
 
     private int startingTileIndex;
     private int dropTileIndex;
     private int liftedPawnIndex;
-
     private int validatedMPawnIndex;
+    private int currentPlayer;
+
+    private boolean skipFlag;
+    private boolean jumpFlag;
+
 
 
     public DataPackage(ArrayList<Tile> tiles, ArrayList<Pawn> pawns, ArrayList<Pawn> movablePawns, ArrayList<Point> winPoints) {
@@ -30,6 +35,38 @@ public class DataPackage implements Serializable {
         clientPawns = pawns;
         clientMovablePawns = movablePawns;
         clientWinPoints = winPoints;
+    }
+
+    public boolean getJumpFlag() {
+        return jumpFlag;
+    }
+
+    public void setJumpFlag(boolean jumpFlag) {
+        this.jumpFlag = jumpFlag;
+    }
+
+    public boolean getSkipFlag() {
+        return skipFlag;
+    }
+
+    public void setSkipFlag(boolean skipFlag) {
+        this.skipFlag = skipFlag;
+    }
+
+    public int getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    public void setCurrentPlayer(int currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
+
+    public Point getValidatedPawnLocation() {
+        return validatedPawnLocation;
+    }
+
+    public void setValidatedPawnLocation(Point validatedPawnLocation) {
+        this.validatedPawnLocation = validatedPawnLocation;
     }
 
     public ArrayList<Tile> getClientTiles() {
@@ -111,4 +148,5 @@ public class DataPackage implements Serializable {
     public void setLiftedPawnIndex(int liftedPawnIndex) {
         this.liftedPawnIndex = liftedPawnIndex;
     }
+
 }

@@ -77,6 +77,7 @@ public class SimpleRules implements Rules{
                 break;
             }
         }
+        //jumping a single tile
         int dx = (int) (tile1.getCircleCenter().getX() - tile2.getCircleCenter().getX());
         int dy = (int) (tile1.getCircleCenter().getY() - tile2.getCircleCenter().getY());
         if(!jumpFlag) {
@@ -93,6 +94,7 @@ public class SimpleRules implements Rules{
                 }
             }
         }
+        //jumping two tiles
             for (int i = 0; i < 6; i++) {
                 for (int j = 0; j < 6; j++) {
                     if (tile1.getNeighbour(i) != null && tile2.getNeighbour(j) != null) {
@@ -102,7 +104,11 @@ public class SimpleRules implements Rules{
                             if (dx == 2 * dx2 && dy == 2 * dy2) {
                                 beetweenTile = tile1.getNeighbour(i);
                                 stillMove = checkIfNextJumpIsPossible();
-                                return tile1.getNeighbour(i).isTaken();
+                                if(basePoint) {
+                                    return tile1.getNeighbour(i).isTaken() && checkIfMoveIsInBase();
+                                } else {
+                                    return tile1.getNeighbour(i).isTaken();
+                                }
                             }
                         }
                     }
