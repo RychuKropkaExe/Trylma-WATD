@@ -6,6 +6,7 @@ import Server.Rules.SimpleRules;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import Client.*;
 
 /**
  * A class that represents a lobby, in which the players are waiting for the game to start. It handles simple functionalities
@@ -18,6 +19,11 @@ public class Lobby {
      * A list that stores players already connected to lobby
      */
     private static final ArrayList<Player> players = new ArrayList<>();
+
+    public static ArrayList<Player> getPlayers() {
+        return players;
+    }
+
     /**
      * a number of players that are required to start the game
      */

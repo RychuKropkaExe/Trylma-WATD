@@ -2,9 +2,7 @@ package Client;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -14,7 +12,7 @@ import java.util.ArrayList;
 /**
  * Creates JFrame with the game board for each player.
  */
-public class Board extends JFrame implements MouseListener {
+public class Board extends JFrame implements MouseListener, ActionListener {
 
 
     /** ClientThread object used for creating game for each Player */
@@ -33,6 +31,7 @@ public class Board extends JFrame implements MouseListener {
     private Point point2;
     private Point savedPosition;
     private Point temp;
+    private Point validatedPawnLocation;
 
     private final int startingArm;
     private final int players;
@@ -48,15 +47,23 @@ public class Board extends JFrame implements MouseListener {
 
     private Socket socket;
 
+    private final JButton skipButton = new JButton("Skip");
+
     private final Boolean[] starArm;
+
     private boolean containsCircle = false;
     private boolean isPlaying = true;
+    private boolean jumpFlag = false;
 
     private ObjectInputStream packageReader;
     private ObjectOutputStream packageSender;
 
     private Connector connector;
 
+
+    JPanel panel;
+
+    JTextArea textArea;
     /**
      * Board constructor creates the game board and starts new Thread for every player.
      *
@@ -65,7 +72,7 @@ public class Board extends JFrame implements MouseListener {
      * @param players  Number of players
      * @throws IOException
      */
-    public Board(Boolean[] arms, int playerID,int players, int winArm, Connector connector) throws IOException {
+    public Board(Boolean[] arms, int playerID,int players, int winArm, int startingPlayer, Connector connector) throws IOException {
         starArm = arms;
         this.winArm = winArm;
         startingArm = playerID;
@@ -76,6 +83,14 @@ public class Board extends JFrame implements MouseListener {
         int myInt = (players==2) ? 1 : 0;
 
         initFrame();
+        if(playerID!=startingPlayer) {
+            getContentPane().removeMouseListener(this);
+            getContentPane().removeMouseMotionListener(mover);
+            skipButton.removeActionListener(this);
+            textArea.setText("NOT YOUR TURN :((");
+        } else {
+            textArea.setText("YOUR TURN!");
+        }
 
         for(int i=(13+myInt); i>=1; i--) {
             if(i<=4) {
@@ -85,7 +100,6 @@ public class Board extends JFrame implements MouseListener {
             }
             startingPoint += 30;
         }
-
         setNeighbours();
         startGame();
     }
@@ -118,8 +132,24 @@ public class Board extends JFrame implements MouseListener {
      * Creates JFrame and Mouse Listeners.
      */
     private void initFrame() {
+        panel = new JPanel();
+        textArea = new JTextArea();
+        textArea.setSize(400,100);
+        textArea.setLocation(new Point(810,35));
+        textArea.setBackground(new Color(117, 148, 229));
+        textArea.setFont(new Font("Consolas",Font.PLAIN,35));
+        textArea.setEditable(false);
+        panel.setLayout(null);
+        panel.setPreferredSize(new Dimension(100,100));
+        panel.setBackground(new Color(117, 148, 229));
+        skipButton.setSize(new Dimension(100,100));
+        skipButton.setLocation(new Point(710,0));
+        panel.add(skipButton);
+        panel.add(textArea);
+        getContentPane().add(panel, BorderLayout.SOUTH);
         getContentPane().addMouseMotionListener(mover);
         getContentPane().addMouseListener(this);
+        skipButton.addActionListener(this);
         getContentPane().setBackground(new Color(117, 148, 229));
         setTitle("Trylma-WATD");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -140,24 +170,70 @@ public class Board extends JFrame implements MouseListener {
                         int Tindex = serverData.getDropTileIndex();
                         int STindex = serverData.getStartingTileIndex();
                         Point newLocation = tiles.get(Tindex).getCircleCenter();
+                        validatedPawnLocation=null;
                         tiles.get(STindex).leave();
                         tiles.get(Tindex).take();
                         movablePawns.get(MPindex).setCircleLocation(newLocation);
                         containsCircle = false;
+                        jumpFlag = false;
+                        textArea.setText("NOT YOUR TURN :((");
+                        getContentPane().removeMouseListener(this);
+                        getContentPane().removeMouseMotionListener(mover);
+                        skipButton.removeActionListener(this);
                     }
-                    if(response.equals("Update")) {
+                    if(response.equals("Valid & move")) {
+                        int MPindex = serverData.getLiftedPawnIndex();
                         int Tindex = serverData.getDropTileIndex();
                         int STindex = serverData.getStartingTileIndex();
-                        Point oldPawnL = serverData.getClientTiles().get(STindex).getCircleCenter();
-                        Point newPawnL = serverData.getClientTiles().get(Tindex).getCircleCenter();
+                        Point newLocation = tiles.get(Tindex).getCircleCenter();
                         tiles.get(STindex).leave();
                         tiles.get(Tindex).take();
-                        for(Pawn pawn : pawns) {
-                            if(pawn.getCircleCenter().equals(oldPawnL)) {
-                                pawn.setCircleLocation(newPawnL);
-                            }
-                        }
+                        validatedPawnLocation = newLocation;
+                        System.out.println(newLocation);
+                        System.out.println(validatedPawnLocation);
+                        movablePawns.get(MPindex).setCircleLocation(newLocation);
                         containsCircle = false;
+                        jumpFlag = true;
+                    }
+                    if(response.equals("Update")) {
+                        System.out.println(serverData.getSkipFlag());
+                        if (!serverData.getSkipFlag()) {
+                            int Tindex = serverData.getDropTileIndex();
+                            int STindex = serverData.getStartingTileIndex();
+                            Point oldPawnL = serverData.getClientTiles().get(STindex).getCircleCenter();
+                            Point newPawnL = serverData.getClientTiles().get(Tindex).getCircleCenter();
+                            validatedPawnLocation = null;
+                            tiles.get(STindex).leave();
+                            tiles.get(Tindex).take();
+                            for (Pawn pawn : pawns) {
+                                if (pawn.getCircleCenter().equals(oldPawnL)) {
+                                    pawn.setCircleLocation(newPawnL);
+                                }
+                            }
+                            if (serverData.getCurrentPlayer() == startingArm) {
+                                getContentPane().addMouseListener(this);
+                                getContentPane().addMouseMotionListener(mover);
+                                skipButton.addActionListener(this);
+                                textArea.setText("YOUR TURN!");
+                            } else {
+                                textArea.setText("NOT YOUR TURN :((");
+                            }
+                            containsCircle = false;
+                            jumpFlag = false;
+                        } else {
+                            System.out.println("Skipujemy");
+                            if (serverData.getCurrentPlayer() == startingArm) {
+                                panel.addMouseListener(this);
+                                getContentPane().addMouseListener(this);
+                                getContentPane().addMouseMotionListener(mover);
+                                skipButton.addActionListener(this);
+                                textArea.setText("YOUR TURN!");
+                            } else {
+                                textArea.setText("NOT YOUR TURN :((");
+                            }
+                            containsCircle = false;
+                            jumpFlag = false;
+                        }
                     }
                     if(response.equals("Invalid")) {
                         int MPindex = serverData.getLiftedPawnIndex();
@@ -165,6 +241,15 @@ public class Board extends JFrame implements MouseListener {
                         movablePawns.get(MPindex).setCircleLocation(tiles.get(STindex).getCircleCenter());
                         containsCircle = false;
 
+                    }
+                    if(response.equals("Skip")){
+                        containsCircle = false;
+                        jumpFlag = false;
+                        validatedPawnLocation = null;
+                        getContentPane().removeMouseListener(this);
+                        getContentPane().removeMouseMotionListener(mover);
+                        skipButton.removeActionListener(this);
+                        textArea.setText("NOT YOUR TURN :((");
                     }
                 }
             } catch(IOException | ClassNotFoundException e) {
@@ -176,8 +261,20 @@ public class Board extends JFrame implements MouseListener {
         DataPackage clientData = new DataPackage(tiles, pawns, movablePawns,winPoints);
         if(command.equals("Skip")) {
             clientData.setClientCommand(command);
+            clientData.setJumpFlag(jumpFlag);
+            clientData.setValidatedPawnLocation(validatedPawnLocation);
+            clientData.setCurrentPlayer(startingArm);
+            clientData.setStartingTileIndex(startingTileIndex);
+            clientData.setDropTileIndex(dropTileIndex);
+            clientData.setLiftedPawnIndex(liftedPawnIndex);
+            clientData.setClientCommand(command);
+            jumpFlag = false;
+            validatedPawnLocation=null;
         } else {
             clientData.setClientCommand(command);
+            clientData.setJumpFlag(jumpFlag);
+            clientData.setValidatedPawnLocation(validatedPawnLocation);
+            clientData.setCurrentPlayer(startingArm);
             clientData.setStartingTileIndex(startingTileIndex);
             clientData.setDropTileIndex(dropTileIndex);
             clientData.setLiftedPawnIndex(liftedPawnIndex);
@@ -280,32 +377,32 @@ public class Board extends JFrame implements MouseListener {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        temp = e.getPoint();
+            temp = e.getPoint();
 
-        for (int z=0; z<movablePawns.size(); z++) {
-            if ((movablePawns.get(z)).containsCircle(new Point(e.getX(), e.getY()))) {
-                System.out.println("TEST");
+            for (int z = 0; z < movablePawns.size(); z++) {
+                if ((movablePawns.get(z)).containsCircle(new Point(e.getX(), e.getY()))) {
+                    System.out.println("TEST");
 
-                containsCircle = true;
-                savedPosition = new Point(movablePawns.get(z).getCircleCenter());
-                liftedPawnIndex = z;
-                for(int i = 0; i< tiles.size(); i++) {
-                    if(tiles.get(i).getCircleCenter().equals(savedPosition)) {
-                        System.out.println(savedPosition);
-                        startingTileIndex=i;
-                        System.out.println(startingTileIndex);
-                        break;
+                    containsCircle = true;
+                    savedPosition = new Point(movablePawns.get(z).getCircleCenter());
+                    liftedPawnIndex = z;
+                    for (int i = 0; i < tiles.size(); i++) {
+                        if (tiles.get(i).getCircleCenter().equals(savedPosition)) {
+                            System.out.println(savedPosition);
+                            startingTileIndex = i;
+                            System.out.println(startingTileIndex);
+                            break;
+                        }
                     }
-                }
-                //Tile temp = circles.get(z);
-                getContentPane().remove(movablePawns.get(z));
-                getContentPane().add(movablePawns.get(z),0);
+                    //Tile temp = circles.get(z);
+                    getContentPane().remove(movablePawns.get(z));
+                    getContentPane().add(movablePawns.get(z), 0);
 
-                return;
+                    return;
                 /*circles.remove(z);
                 circles.add(temp);*/
+                }
             }
-        }
     }
 
     @Override
@@ -364,6 +461,17 @@ public class Board extends JFrame implements MouseListener {
     @Override
     public void mouseExited(MouseEvent e) {
 
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if(e.getSource()==skipButton) {
+            try {
+                sendRequest("Skip");
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        }
     }
 
     class MoveTile extends MouseAdapter {
