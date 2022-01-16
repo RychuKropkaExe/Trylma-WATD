@@ -1,9 +1,6 @@
 package Server;
 
-import Client.DataPackage;
-import Client.Pakiet;
-import Client.Pawn;
-import Client.Tile;
+import Client.*;
 import Server.Rules.Rules;
 
 import javax.xml.crypto.Data;
@@ -50,12 +47,14 @@ public class Player extends Thread {
                     if(rules.checkMove(dataPackage)) {
                         if(rules.stillMove()) {
                             dataPackage.setServerResponse("Valid & move");
+                            dataPackage.setSkipFlag(false);
                             packageSender.reset();
                             packageSender.writeObject(dataPackage);
                             packageSender.flush();
                             updatePlayers(dataPackage);
                         } else {
                             dataPackage.setServerResponse("Valid");
+                            dataPackage.setSkipFlag(false);
                             dataPackage.setCurrentPlayer(nextPlayer(dataPackage.getCurrentPlayer()));
                             packageSender.reset();
                             packageSender.writeObject(dataPackage);
@@ -65,10 +64,19 @@ public class Player extends Thread {
                         }
                     } else {
                         dataPackage.setServerResponse("Invalid");
+                        dataPackage.setSkipFlag(false);
                         packageSender.reset();
                         packageSender.writeObject(dataPackage);
                         packageSender.flush();
                     }
+                } else if(command.equals("Skip")) {
+                    dataPackage.setServerResponse("Skip");
+                    dataPackage.setSkipFlag(true);
+                    dataPackage.setCurrentPlayer(nextPlayer(dataPackage.getCurrentPlayer()));
+                    packageSender.reset();
+                    packageSender.writeObject(dataPackage);
+                    packageSender.flush();
+                    updatePlayers(dataPackage);
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -86,7 +94,7 @@ public class Player extends Thread {
             }
         }
     }
-    private int nextPlayer(int player) {
+    public int nextPlayer(int player) {
         int current = 0;
         for(int i = 0; i<players.size(); i++) {
             if(corners[i][0]==player) {

@@ -1,8 +1,7 @@
 package Server.Rules;
 
-import Client.DataPackage;
-import Client.Pawn;
-import Client.Tile;
+import Client.*;
+
 
 import javax.xml.crypto.Data;
 import java.awt.*;
@@ -21,11 +20,15 @@ public class SimpleRules implements Rules{
 
     private Point oldPawnLocation;
     private Point newPawnLocation;
+    private Point validatedPawnLocation;
 
     private int startingTileIndex;
     private int dropTileIndex;
     private int liftedPawnIndex;
+
     private boolean stillMove;
+    private boolean jumpFlag;
+    private boolean basePoint = false;
 
     private int validatedMPawnIndex;
     @Override
@@ -40,6 +43,9 @@ public class SimpleRules implements Rules{
     }
     @Override
     public void setBoardVariables(DataPackage data) {
+        basePoint = false;
+        jumpFlag = data.getJumpFlag();
+        validatedPawnLocation = data.getValidatedPawnLocation();
         clientTiles = new ArrayList<>(data.getClientTiles());
         clientPawns = new ArrayList<>(data.getClientPawns());
         clientMovablePawns = new ArrayList<>(data.getClientMovablePawns());
@@ -55,35 +61,63 @@ public class SimpleRules implements Rules{
         stillMove=false;
         Tile tile1 = clientTiles.get(startingTileIndex);
         Tile tile2 = clientTiles.get(dropTileIndex);
+        if(jumpFlag && !validatedPawnLocation.equals(clientTiles.get(startingTileIndex).getCircleCenter())){
+            System.out.println("JUMP FLAG DUPA");
+            System.out.println(validatedPawnLocation);
+            System.out.println(clientTiles.get(startingTileIndex).getCircleCenter());
+            stillMove=true;
+            return false;
+        }
         if(tile2.isTaken()) {
             return false;
         }
-        int dx = (int) (tile1.getCircleCenter().getX() - tile2.getCircleCenter().getX());
-        int dy = (int) (tile1.getCircleCenter().getY() - tile2.getCircleCenter().getY());
-        for(int i = 0; i<6;i++) {
-            if(tile1.getNeighbour(i)!=null) {
-                if (tile1.getNeighbour(i).getCircleCenter().equals(tile2.getCircleCenter())){
-                    stillMove = false;
-                    return !tile2.isTaken();
-                }
+        for(Point point : clientWinPoints) {
+            if(point.getLocation().equals(clientTiles.get(startingTileIndex).getCircleCenter())) {
+                basePoint=true;
+                break;
             }
         }
-        for(int i = 0; i<6;i++) {
-            for(int j =0; j<6; j++) {
-                if(tile1.getNeighbour(i)!=null && tile2.getNeighbour(j)!=null) {
-                    int dx2 = (int)(tile1.getCircleCenter().getX() - tile2.getNeighbour(j).getCircleCenter().getX());
-                    int dy2 = (int)(tile1.getCircleCenter().getY() - tile2.getNeighbour(j).getCircleCenter().getY());
-                    if(tile1.getNeighbour(i).getCircleCenter().equals(tile2.getNeighbour(j).getCircleCenter())) {
-                        if(dx==2*dx2 && dy==2*dy2 ) {
-                            beetweenTile = tile1.getNeighbour(i);
-                            stillMove = checkIfNextJumpIsPossible();
-                            return tile1.getNeighbour(i).isTaken();
+        int dx = (int) (tile1.getCircleCenter().getX() - tile2.getCircleCenter().getX());
+        int dy = (int) (tile1.getCircleCenter().getY() - tile2.getCircleCenter().getY());
+        if(!jumpFlag) {
+            for (int i = 0; i < 6; i++) {
+                if (tile1.getNeighbour(i) != null) {
+                    if (tile1.getNeighbour(i).getCircleCenter().equals(tile2.getCircleCenter())) {
+                        stillMove = false;
+                        if(basePoint) {
+                            return  !tile2.isTaken() && checkIfMoveIsInBase();
+                        } else {
+                            return !tile2.isTaken();
                         }
                     }
                 }
             }
         }
+            for (int i = 0; i < 6; i++) {
+                for (int j = 0; j < 6; j++) {
+                    if (tile1.getNeighbour(i) != null && tile2.getNeighbour(j) != null) {
+                        int dx2 = (int) (tile1.getCircleCenter().getX() - tile2.getNeighbour(j).getCircleCenter().getX());
+                        int dy2 = (int) (tile1.getCircleCenter().getY() - tile2.getNeighbour(j).getCircleCenter().getY());
+                        if (tile1.getNeighbour(i).getCircleCenter().equals(tile2.getNeighbour(j).getCircleCenter())) {
+                            if (dx == 2 * dx2 && dy == 2 * dy2) {
+                                beetweenTile = tile1.getNeighbour(i);
+                                stillMove = checkIfNextJumpIsPossible();
+                                return tile1.getNeighbour(i).isTaken();
+                            }
+                        }
+                    }
+                }
+            }
 
+        return false;
+    }
+    private boolean checkIfMoveIsInBase() {
+        Tile tile2 = clientTiles.get(dropTileIndex);
+        for(Point point: clientWinPoints) {
+            if(tile2.getCircleCenter().equals(point)) {
+                return true;
+            }
+        }
         return false;
     }
     private boolean checkIfNextJumpIsPossible(){

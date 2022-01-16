@@ -1,11 +1,9 @@
 package Server;
 
-import Client.Pakiet;
 
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
-
 public class Server {
 
     private static final ArrayList<Lobby> lobbies = new ArrayList<>();
