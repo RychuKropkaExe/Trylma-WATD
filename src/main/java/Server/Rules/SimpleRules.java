@@ -29,6 +29,8 @@ public class SimpleRules implements Rules{
     private boolean stillMove;
     private boolean jumpFlag;
     private boolean basePoint = false;
+    private boolean isWinning = false;
+    private boolean isBlocking = false;
 
     private int validatedMPawnIndex;
     @Override
@@ -62,9 +64,6 @@ public class SimpleRules implements Rules{
         Tile tile1 = clientTiles.get(startingTileIndex);
         Tile tile2 = clientTiles.get(dropTileIndex);
         if(jumpFlag && !validatedPawnLocation.equals(clientTiles.get(startingTileIndex).getCircleCenter())){
-            System.out.println("JUMP FLAG DUPA");
-            System.out.println(validatedPawnLocation);
-            System.out.println(clientTiles.get(startingTileIndex).getCircleCenter());
             stillMove=true;
             return false;
         }
@@ -87,6 +86,12 @@ public class SimpleRules implements Rules{
                         stillMove = false;
                         if(basePoint) {
                             return  !tile2.isTaken() && checkIfMoveIsInBase();
+                        } else if(checkIfMoveIsInBase()) {
+                            if(!tile2.isTaken()) {
+                                isWinning = checkIfMoveIsWinning();
+                                isBlocking = checkIfBlock();
+                                return true;
+                            }
                         } else {
                             return !tile2.isTaken();
                         }
@@ -106,6 +111,12 @@ public class SimpleRules implements Rules{
                                 stillMove = checkIfNextJumpIsPossible();
                                 if(basePoint) {
                                     return tile1.getNeighbour(i).isTaken() && checkIfMoveIsInBase();
+                                } else if(checkIfMoveIsInBase()) {
+                                    if(!tile1.getNeighbour(i).isTaken()) {
+                                        isWinning = checkIfMoveIsWinning();
+                                        isBlocking = checkIfBlock();
+                                        return true;
+                                    }
                                 } else {
                                     return tile1.getNeighbour(i).isTaken();
                                 }
@@ -117,6 +128,79 @@ public class SimpleRules implements Rules{
 
         return false;
     }
+
+    private boolean checkIfMoveIsWinning() {
+        int size = clientWinPoints.size();
+        int counter = 0;
+        clientMovablePawns.get(liftedPawnIndex).setCircleLocation(clientTiles.get(dropTileIndex).getCircleCenter());
+        for (Pawn pawn : clientMovablePawns) {
+            for (Point point : clientWinPoints) {
+                if (pawn.getCircleCenter().equals(point)) {
+                    counter++;
+                    break;
+                }
+            }
+        }
+        if (counter == size) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isBlocking() {
+        return isBlocking;
+    }
+    public boolean isWinning() {
+        return isWinning;
+    }
+
+    private boolean checkIfBlock() {
+        clientMovablePawns.get(liftedPawnIndex).setCircleLocation(clientTiles.get(dropTileIndex).getCircleCenter());
+        for(Point point: clientWinPoints) {
+            for(Tile tile: clientTiles) {
+                int counter=0;
+                boolean canBlock = false;
+                if(tile.getCircleCenter().equals(point)) {
+                    for(int i = 0; i<6;i++) {
+                        if(tile.getNeighbour(i)!=null) {
+                            if(clientWinPoints.contains(tile.getNeighbour(i).getCircleCenter())) {
+                                for(Pawn pawn: clientMovablePawns) {
+                                    if (tile.getNeighbour(i).getCircleCenter().equals(pawn.getCircleCenter())) {
+                                        counter++;
+                                        break;
+                                    }
+                                }
+                            } else {
+                                canBlock = true;
+                            }
+                        }
+                    }
+                    if(counter>=4 && canBlock) {
+                        return true;
+                        /*int block = clientWinPoints.size();
+                        for(Tile tile2 : clientTiles) {
+                            for(Point winPoint: clientWinPoints) {
+                                if(tile2.getCircleCenter().equals(winPoint)) {
+                                    if(tile2.isTaken) {
+                                        block--;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if(block==0) {
+                            return true;
+                        } else {
+                            return false;
+                        }*/
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private boolean checkIfMoveIsInBase() {
         Tile tile2 = clientTiles.get(dropTileIndex);
         for(Point point: clientWinPoints) {

@@ -8,4 +8,6 @@ public interface Rules{
     boolean stillMove();
     void setBoardVariables(DataPackage data);
     boolean validateMove();
+    boolean isWinning();
+    boolean isBlocking();
 }

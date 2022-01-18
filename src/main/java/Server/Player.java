@@ -16,25 +16,22 @@ public class Player extends Thread {
     private final ObjectInputStream packageReader;
     private final Socket client;
     DataPackage dataPackage;
-
-    private ArrayList<Tile> clientTiles;
-    private ArrayList<Pawn> clientPawns;
-    private ArrayList<Pawn> clientMovablePawns;
-    private ArrayList<Point> clientWinPoints;
     private ArrayList<Player> players;
     private final Rules rules;
-    private int[][] corners;
+    private static int[][] corners;
+    private static int placeCounter = 1;
+    public volatile static int pointer;
+    public volatile static boolean exitflag = false;
+    public static final ArrayList<Integer> cor = new ArrayList<>();
 
 
     public Player(Socket socket, Rules rules) throws IOException{
         this.client = socket;
         this.rules = rules;
-        this.corners=corners;
         packageSender = new ObjectOutputStream(socket.getOutputStream());
         packageReader = new ObjectInputStream(socket.getInputStream());
         /*packageSender = new ObjectOutputStream(client.getOutputStream());
         packageReader = new ObjectInputStream(client.getInputStream());*/
-        System.out.println(client);
     }
 
     @Override
@@ -45,13 +42,36 @@ public class Player extends Thread {
                 String command = dataPackage.getClientCommand();
                 if(command.equals("Validate")) {
                     if(rules.checkMove(dataPackage)) {
-                        if(rules.stillMove()) {
+                        if(rules.isWinning()) {
+                            dataPackage.setServerResponse("You won");
+                            dataPackage.setPlaceCounter(placeCounter);
+                            placeCounter++;
+                            if(placeCounter==players.size()) {
+                                System.out.println("EXIT FLAG");
+                                dataPackage.setExitFlag(true);
+                            }
+                            dataPackage.setSkipFlag(false);
+                            dataPackage.setWinning(true);
+                            dataPackage.setCurrentPlayer(nextPlayer(dataPackage.getCurrentPlayer()));
+                            removePlayer(dataPackage.getCurrentPlayer());
+                            packageSender.reset();
+                            packageSender.writeObject(dataPackage);
+                            packageSender.flush();
+                            updatePlayers(dataPackage, "Update");
+                        } else if(rules.isBlocking()) {
+                            dataPackage.setServerResponse("You're Blocked");
+                            packageSender.reset();
+                            packageSender.writeObject(dataPackage);
+                            packageSender.flush();
+
+                        }
+                        else if(rules.stillMove()) {
                             dataPackage.setServerResponse("Valid & move");
                             dataPackage.setSkipFlag(false);
                             packageSender.reset();
                             packageSender.writeObject(dataPackage);
                             packageSender.flush();
-                            updatePlayers(dataPackage);
+                            updatePlayers(dataPackage, "Update");
                         } else {
                             dataPackage.setServerResponse("Valid");
                             dataPackage.setSkipFlag(false);
@@ -59,7 +79,7 @@ public class Player extends Thread {
                             packageSender.reset();
                             packageSender.writeObject(dataPackage);
                             packageSender.flush();
-                            updatePlayers(dataPackage);
+                            updatePlayers(dataPackage, "Update");
 
                         }
                     } else {
@@ -76,7 +96,7 @@ public class Player extends Thread {
                     packageSender.reset();
                     packageSender.writeObject(dataPackage);
                     packageSender.flush();
-                    updatePlayers(dataPackage);
+                    updatePlayers(dataPackage, "Update");
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -95,32 +115,72 @@ public class Player extends Thread {
         }
     }
     public int nextPlayer(int player) {
-        int current = 0;
-        for(int i = 0; i<players.size(); i++) {
-            if(corners[i][0]==player) {
-                current=i;
-                break;
+        synchronized (Player.cor) {
+            int index = Player.cor.indexOf(player);
+            if (Player.cor.size() == 1) {
+                return Player.cor.get(0);
+            } else if (index + 1 == Player.cor.size()) {
+                return Player.cor.get(0);
+            } else {
+                return Player.cor.get(index + 1);
             }
         }
+       /* pointer=0;
         for(int i=0;i<players.size(); i++) {
             if(corners[i][0]==player) {
-                if(current+1==players.size()) {
-                    return corners[0][0];
-                } else {
-                    return corners[current+1][0];
+                pointer = i;
+                while (true) {
+                    if (pointer + 1 == players.size()) {
+                        pointer=0;
+                        if(corners[0][0]!=-1) {
+                            System.out.println("DZIALA ZAJEBISCIE");
+                            break;
+                        }
+                    } else {
+                        if(corners[pointer+1][0]==-1) {
+                            pointer++;
+                        } else {
+                            System.out.println("DZIALA ZAJEBISCIE 2");
+                            break;
+                        }
+                    }
                 }
             }
         }
-        return corners[0][0];
+        if(pointer==0) {
+            return corners[0][0];
+        } else {
+            return corners[pointer + 1][0];
+        }*/
+    }
+    public void removePlayer(int player) {
+        synchronized (Player.cor) {
+            Player.cor.remove((Integer) player);
+            for (int i = 0; i < Player.cor.size(); i++) {
+                System.out.println("TABELA" + Player.cor.get(i));
+            }
+        /*for(int i = 0; i<players.size();i++) {
+            if(corners[i][0]==player) {
+                corners[i][0]=-1;
+            }
+        }*/
+        }
     }
 
     public void startGame(ArrayList<Player> players,int[][] corners) throws IOException {
-        this.corners=corners;
+        Player.corners=corners;
         this.players = players;
+        for(int i = 0; i<players.size(); i++) {
+            if(Player.cor.contains(corners[i][0])){
+                break;
+            } else {
+                Player.cor.add(corners[i][0]);
+            }
+        }
         this.start();
     }
 
-    private void updatePlayers(DataPackage dataPackage) throws IOException {
+    private void updatePlayers(DataPackage dataPackage, String message) throws IOException {
         DataPackage temp = dataPackage;
         for(Player player : players) {
             if(!player.equals(this)) {

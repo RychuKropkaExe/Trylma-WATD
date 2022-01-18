@@ -32,7 +32,7 @@ public class Lobby {
      * counts how many players are there in lobby
      */
     private int counter = 0;
-    private final int[][] corners = new int[6][2];
+    private final static int[][] corners = new int[6][2];
     /**
      * Tells if lobby is full
      */
@@ -45,7 +45,6 @@ public class Lobby {
         players.add(new Player(socket, new SimpleRules()));
         playersQuantity = getPlayersQuantity();
         arms = getArms();
-        System.out.println("DZIALA");
         setPlayersArms();
         //sendToSpecific("Lobby created successfully",0);
     }
@@ -59,7 +58,6 @@ public class Lobby {
             players.get(i).sendMessage(corners[i][0]);
             players.get(i).sendMessage(playersQuantity);
             players.get(i).sendMessage(corners[i][1]);
-            System.out.println(startingPlayer);
             players.get(i).sendMessage(corners[startingPlayer][0]);
 
         }
@@ -125,8 +123,7 @@ public class Lobby {
         //players.get(counter).sendMessage("[Server] You have joined the lobby!");
         counter++;
 
-        if(players.size()==playersQuantity) {
-            System.out.println("ODPALAMY");
+        if(players.size()==playersQuantity) { ;
             isOpen = false;
             startGame();
         }
