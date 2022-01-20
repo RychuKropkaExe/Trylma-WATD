@@ -15,8 +15,6 @@ import java.util.ArrayList;
 public class Board extends JFrame implements MouseListener, ActionListener {
 
 
-    /** ClientThread object used for creating game for each Player */
-    public ClientThread game;
 
     /** ArrayLists containing tiles and pawns that create the board. */
     private final ArrayList<Tile> tiles = new ArrayList<>();
@@ -54,6 +52,7 @@ public class Board extends JFrame implements MouseListener, ActionListener {
     private boolean containsCircle = false;
     private boolean isPlaying = true;
     private boolean jumpFlag = false;
+    private boolean initflag = true;
 
     private ObjectInputStream packageReader;
     private ObjectOutputStream packageSender;
@@ -110,10 +109,6 @@ public class Board extends JFrame implements MouseListener, ActionListener {
         this.players = players;
 
         int myInt = (players==2) ? 1 : 0;
-
-        initFrame();
-
-
         for(int i=13+myInt; i>=1; i--) {
             if(i<=4) {
                 drawUsingFunction(startingPoint, i,true);
@@ -122,10 +117,9 @@ public class Board extends JFrame implements MouseListener, ActionListener {
             }
             startingPoint += 30;
         }
-
+        initflag=false;
+        initFrame();
         setNeighbours();
-        validate();
-        repaint();
     }
 
     /**
@@ -155,7 +149,9 @@ public class Board extends JFrame implements MouseListener, ActionListener {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 600);
         setExtendedState(MAXIMIZED_BOTH);
-        setVisible(true);
+        if(initflag) {
+            setVisible(true);
+        }
     }
 
     private void startGame() throws IOException {
@@ -197,6 +193,11 @@ public class Board extends JFrame implements MouseListener, ActionListener {
                     }
                     if(response.equals("Update")) {
                         System.out.println(serverData.getSkipFlag());
+                        if(serverData.isExitFlag()) {
+                            JOptionPane.showMessageDialog(null, "YOURE LOSER");
+                            this.dispose();
+                            System.exit(0);
+                        }
                         if (!serverData.getSkipFlag()) {
                             int Tindex = serverData.getDropTileIndex();
                             int STindex = serverData.getStartingTileIndex();
@@ -250,6 +251,33 @@ public class Board extends JFrame implements MouseListener, ActionListener {
                         getContentPane().removeMouseMotionListener(mover);
                         skipButton.removeActionListener(this);
                         textArea.setText("NOT YOUR TURN :((");
+                    }
+                    if(response.equals("You won")) {
+                        textArea.setText("You Won");
+                        int MPindex = serverData.getLiftedPawnIndex();
+                        int Tindex = serverData.getDropTileIndex();
+                        int STindex = serverData.getStartingTileIndex();
+                        Point newLocation = tiles.get(Tindex).getCircleCenter();
+                        validatedPawnLocation=null;
+                        tiles.get(STindex).leave();
+                        tiles.get(Tindex).take();
+                        movablePawns.get(MPindex).setCircleLocation(newLocation);
+                        containsCircle = false;
+                        jumpFlag = false;
+                        getContentPane().removeMouseListener(this);
+                        getContentPane().removeMouseMotionListener(mover);
+                        skipButton.removeActionListener(this);
+                        if(serverData.isExitFlag()) {
+                            JOptionPane.showMessageDialog(null, "YOU'RE WINNER");
+                            this.dispose();
+                            System.exit(0);
+                        }
+                        System.out.println("You won!");
+                    }
+                    if(response.equals("You're Blocked")) {
+                        JOptionPane.showMessageDialog(null, "YOURE BLOCKED");
+                        this.dispose();
+                        System.exit(0);
                     }
                 }
             } catch(IOException | ClassNotFoundException e) {
@@ -481,7 +509,7 @@ public class Board extends JFrame implements MouseListener, ActionListener {
             temp = e.getPoint();
 
             if (containsCircle) {
-                movablePawns.get(liftedPawnIndex).translateCircle(translateVector, e);
+                movablePawns.get(liftedPawnIndex).translateCircle(translateVector);
             }
         }
     }
@@ -566,5 +594,19 @@ public class Board extends JFrame implements MouseListener, ActionListener {
                 }
             }
         }
+    }
+
+    public ArrayList<Tile> getBoardTiles() {
+        return tiles;
+    }
+    public ArrayList<Pawn> getPawns() {
+        return pawns;
+    }
+
+    public ArrayList<Pawn> getMovablePawns() {
+        return movablePawns;
+    }
+    public ArrayList<Point> getWinPoints() {
+        return winPoints;
     }
 }

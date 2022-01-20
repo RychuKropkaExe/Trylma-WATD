@@ -22,7 +22,7 @@ public class Player extends Thread {
     private static int placeCounter = 1;
     public volatile static int pointer;
     public volatile static boolean exitflag = false;
-    public static final ArrayList<Integer> cor = new ArrayList<>();
+    public static ArrayList<Integer> cor = new ArrayList<>();
 
 
     public Player(Socket socket, Rules rules) throws IOException{
@@ -63,6 +63,7 @@ public class Player extends Thread {
                             packageSender.reset();
                             packageSender.writeObject(dataPackage);
                             packageSender.flush();
+                            updatePlayers(dataPackage, "You're Blocked");
 
                         }
                         else if(rules.stillMove()) {
@@ -133,14 +134,12 @@ public class Player extends Thread {
                     if (pointer + 1 == players.size()) {
                         pointer=0;
                         if(corners[0][0]!=-1) {
-                            System.out.println("DZIALA ZAJEBISCIE");
                             break;
                         }
                     } else {
                         if(corners[pointer+1][0]==-1) {
                             pointer++;
                         } else {
-                            System.out.println("DZIALA ZAJEBISCIE 2");
                             break;
                         }
                     }

@@ -77,7 +77,7 @@ public class Pawn extends JComponent {
      *
      * @param circleP  New center Point
      */
-    public void translateCircle(Point circleP, MouseEvent e){
+    public void translateCircle(Point circleP){
         circleCenter = new Point(circleP.x+circleCenter.x,circleP.y+circleCenter.y);
         revalidate();
         repaint();
@@ -91,5 +91,8 @@ public class Pawn extends JComponent {
 
     public Point getCircleCenter() {
         return circleCenter;
+    }
+    public Color getCircleColor() {
+        return circleColor;
     }
 }

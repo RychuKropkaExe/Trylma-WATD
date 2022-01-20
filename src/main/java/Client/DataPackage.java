@@ -24,9 +24,13 @@ public class DataPackage implements Serializable {
     private int liftedPawnIndex;
     private int validatedMPawnIndex;
     private int currentPlayer;
+    private int placeCounter;
 
     private boolean skipFlag;
     private boolean jumpFlag;
+    private boolean isWinning;
+    private boolean exitFlag;
+
 
 
 
@@ -35,6 +39,30 @@ public class DataPackage implements Serializable {
         clientPawns = pawns;
         clientMovablePawns = movablePawns;
         clientWinPoints = winPoints;
+    }
+
+    public boolean isExitFlag() {
+        return exitFlag;
+    }
+
+    public void setExitFlag(boolean exitFlag) {
+        this.exitFlag = exitFlag;
+    }
+
+    public boolean isWinning() {
+        return isWinning;
+    }
+
+    public void setWinning(boolean winning) {
+        isWinning = winning;
+    }
+
+    public int getPlaceCounter() {
+        return placeCounter;
+    }
+
+    public void setPlaceCounter(int placeCounter) {
+        this.placeCounter = placeCounter;
     }
 
     public boolean getJumpFlag() {
